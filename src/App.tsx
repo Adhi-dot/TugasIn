@@ -5,7 +5,9 @@ import { MOCK_TASKS } from './data/mockTasks';
 import { DashboardHeader } from './components/dashboard/DashboardHeader';
 import { DashboardView } from './components/dashboard/DashboardView';
 import { TaskChecklist } from './components/checklist/TaskChecklist';
-import { X, Sparkles, Plus, BookOpen, Calendar, FileText } from 'lucide-react';
+import { AnnouncementInputAndPreview } from './components/features/input-preview';
+import { X, Plus, BookOpen, Calendar, FileText } from 'lucide-react';
+
 
 export const App: React.FC = () => {
   // Flag indicating if current state is temporary demo fixture (kept strictly in memory)
@@ -77,6 +79,16 @@ export const App: React.FC = () => {
 
   const handleSelectTask = (task: Task) => {
     setSelectedTask(task);
+  };
+
+  // Handler integrasi onSaveTask dari alur ekstraksi pengumuman
+  const handleSaveTask = async (newTask: Task): Promise<boolean> => {
+    try {
+      setTasks((prev) => [newTask, ...prev]);
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   // Quick Demo Controls for development (Explicit action only)
@@ -284,30 +296,36 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* Modal Dialog: Placeholder Integrasi Tambah dari Pengumuman */}
+      {/* Modal Dialog: Alur Input Pengumuman & Preview (Member Input/Preview) */}
       {activeModal === 'announcement' && (
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4"
+          aria-labelledby="modal-announcement-title"
+          className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
         >
-          <div className="bg-white border border-border rounded-2xl max-w-md w-full p-6 shadow-xl relative text-center">
-            <div className="w-12 h-12 rounded-xl bg-indigo-50 text-brand-primary flex items-center justify-center mx-auto mb-3">
-              <Sparkles className="w-6 h-6" />
-            </div>
-            <h3 className="text-base font-bold text-ink-primary">
-              Integrasi Input Pengumuman
-            </h3>
-            <p className="mt-2 text-xs sm:text-sm text-ink-muted leading-relaxed">
-              Tombol ini telah siap dan menyediakan callback ke alur ekstraksi chat Gemini (bagian Member Input/Preview).
-            </p>
+          <div className="bg-surface border border-hairline rounded-2xl max-w-4xl w-full p-6 shadow-2xl relative my-auto animate-in fade-in zoom-in-95 duration-150">
             <button
               type="button"
               onClick={() => setActiveModal(null)}
-              className="mt-5 w-full py-2 bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold rounded-lg transition-colors"
+              className="absolute top-4 right-4 p-2 rounded-lg text-ink-muted hover:text-ink hover:bg-slate-100 transition-colors z-10"
+              aria-label="Tutup form input pengumuman"
             >
-              Mengerti
+              <X className="w-5 h-5" />
             </button>
+
+            <AnnouncementInputAndPreview
+              onSaveTask={async (newTask) => {
+                const success = await handleSaveTask(newTask);
+                if (success) {
+                  setActiveModal(null);
+                }
+                return success;
+              }}
+              onManualAdd={() => {
+                setActiveModal('manual');
+              }}
+            />
           </div>
         </div>
       )}

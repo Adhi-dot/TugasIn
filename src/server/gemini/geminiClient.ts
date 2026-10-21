@@ -19,23 +19,36 @@ export interface IGeminiClient {
 }
 
 const DEFAULT_TIMEOUT_MS = 30000;
-const DEFAULT_MODEL = 'gemini-1.5-flash';
+/**
+ * Model Default Gemini:
+ * Mengikuti PRD Bagian 9 & Dokumentasi Resmi Google AI (ai.google.dev):
+ * Model dapat dikonfigurasi melalui variabel lingkungan GEMINI_MODEL di file .env server,
+ * dengan nilai bawaan 'gemini-2.5-flash' (atau model aktif yang ditentukan tim).
+ */
+export const DEFAULT_GEMINI_MODEL =
+  (typeof process !== 'undefined' && process.env?.GEMINI_MODEL) || 'gemini-2.5-flash';
 
 export class GeminiService implements IGeminiClient {
   private client: GoogleGenerativeAI | null = null;
   private modelName: string;
 
-  constructor(apiKey?: string, modelName: string = DEFAULT_MODEL) {
+  constructor(apiKey?: string, modelName?: string) {
     const key =
       apiKey ||
       (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) ||
-      (typeof process !== 'undefined' && process.env?.VITE_GEMINI_API_KEY) ||
       '';
 
     if (key && key.trim().length > 0) {
       this.client = new GoogleGenerativeAI(key.trim());
     }
-    this.modelName = modelName;
+    this.modelName =
+      modelName ||
+      (typeof process !== 'undefined' && process.env?.GEMINI_MODEL) ||
+      DEFAULT_GEMINI_MODEL;
+  }
+
+  public getModelName(): string {
+    return this.modelName;
   }
 
   public isConfigured(): boolean {

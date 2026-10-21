@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import { handleGenerateChecklist } from '../src/server/api/generateChecklist';
 import { IGeminiClient } from '../src/server/gemini/geminiClient';

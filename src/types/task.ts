@@ -13,22 +13,41 @@ export type { ChecklistOrigin };
 
 export type ChecklistItem = ChecklistItemData;
 
+// Alias untuk kompatibilitas ke belakang
+export type TaskChecklistItem = ChecklistItem;
+
 export interface Task {
   id: string;
+  title: string;                    // Wajib, maks 150 karakter
+  course: string | null;            // Maks 100 karakter
+  description: string;
+  sourceText: string;               // Teks pengumuman; string kosong "" untuk input manual
+  sourceMessageDate: string | null; // Acuan tanggal relatif (YYYY-MM-DD atau null)
+  dueDate: string | null;           // Tanggal penuh valid (YYYY-MM-DD atau null)
+  dueTime: string | null;           // HH:mm atau null, hanya jika dueDate tersedia
+  sourceTimezone: string | null;    // Zona yang disebutkan/dikonfirmasi (atau null)
+  displayTimezone: string;          // Zona untuk tampilan dan perhitungan indikator (IANA atau label terdaftar)
+  requirements: string[];           // Ketentuan dari sumber
+  status: TaskStatus;               // not_started | in_progress | done
+  checklist: ChecklistItem[];       // Langkah pengerjaan
+  createdAt: string;                // ISO timestamp
+  updatedAt: string;                // ISO timestamp
+}
+
+/**
+ * Draft Tugas hasil ekstraksi Gemini sebelum disimpan pengguna
+ */
+export interface TaskDraft {
   title: string;
   course: string | null;
   description: string;
-  sourceText?: string;                // Teks pengumuman; string kosong "" untuk input manual
-  sourceMessageDate?: string | null;  // Acuan tanggal relatif (YYYY-MM-DD atau null)
-  dueDate: string | null;            // Tanggal penuh valid (YYYY-MM-DD atau null)
-  dueTime: string | null;            // HH:mm atau null, hanya jika dueDate tersedia
-  sourceTimezone: string | null;     // Zona yang disebutkan/dikonfirmasi (atau null)
-  displayTimezone: string;           // Zona untuk tampilan dan perhitungan indikator (IANA atau label terdaftar)
-  requirements: string[];            // Ketentuan dari sumber
-  status: TaskStatus;                // not_started | in_progress | done
-  checklist: ChecklistItem[];        // Langkah pengerjaan
-  createdAt: string;                 // ISO timestamp
-  updatedAt: string;                 // ISO timestamp
+  dueDate: string | null;
+  dueTime: string | null;
+  sourceTimezone: string | null;
+  requirements: string[];
+  isAmbiguousDeadline?: boolean;
+  ambiguityReason?: string;
+  ambiguityType?: 'relative_no_source_date' | 'ambiguous_relative_phrase' | 'no_year' | 'conflicting_deadlines';
 }
 
 export interface TaskDeadlineInfo {

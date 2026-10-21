@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { ChecklistItemData, ChecklistApiError } from '../types/checklist';
-import { handleGenerateChecklist } from '../server/api/generateChecklist';
 
 export interface UseTaskChecklistProps {
   taskId: string;
@@ -89,7 +88,24 @@ export function useTaskChecklist({
     };
 
     try {
-      const response = await handleGenerateChecklist(requestPayload);
+      // 1. Validasi awal client
+      if (!taskTitle || taskTitle.trim().length === 0) {
+        setError({
+          code: 'INVALID_INPUT',
+          message: 'Judul tugas wajib diisi sebelum membuat langkah pengerjaan.',
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // 2. Pemanggilan HTTP ke backend endpoint POST /api/generate-checklist
+      const res = await fetch('/api/generate-checklist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestPayload),
+      });
 
       // Proteksi stale request: abaikan hasil jika taskId telah berubah di UI
       if (activeTaskIdRef.current !== taskId) {
@@ -97,9 +113,11 @@ export function useTaskChecklist({
         return;
       }
 
-      if (response.status === 200 && 'steps' in response.body) {
-        const newChecklistItems: ChecklistItemData[] = response.body.steps.map(
-          (stepText, index) => ({
+      const data = await res.json();
+
+      if (res.ok && data && Array.isArray(data.steps)) {
+        const newChecklistItems: ChecklistItemData[] = data.steps.map(
+          (stepText: string, index: number) => ({
             id: `chk-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 6)}`,
             text: stepText,
             completed: false,
@@ -108,15 +126,19 @@ export function useTaskChecklist({
         );
 
         persistChecklist(newChecklistItems);
-      } else if ('error' in response.body) {
-        setError(response.body.error);
+      } else if (data && data.error) {
+        setError(data.error);
+      } else {
+        setError({
+          code: 'INVALID_AI_RESPONSE',
+          message: 'Respons dari server tidak dapat diproses.',
+        });
       }
     } catch (err: unknown) {
       if (activeTaskIdRef.current === taskId) {
-        const errObj = err as ChecklistApiError;
         setError({
-          code: errObj.code || 'NETWORK_ERROR',
-          message: errObj.message || 'Gagal menghubungi server untuk membuat langkah pengerjaan.',
+          code: 'NETWORK_ERROR',
+          message: 'Gagal terhubung ke endpoint backend /api/generate-checklist. Pastikan server aktif.',
         });
       }
     } finally {

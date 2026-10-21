@@ -1,92 +1,28 @@
 import { ExtractionRequest, ExtractionResponse, ExtractionErrorState } from '../types/extraction';
+import { getSimulatedExtraction } from './mockExtractionService';
 
-const API_ENDPOINT = '/api/extract-task';
-const DEFAULT_TIMEOUT_MS = 30000;
+export const API_ENDPOINT = '/api/extract-task';
+export const DEFAULT_TIMEOUT_MS = 30000;
 
-/**
- * Simulasi Fixture Cerdas (Hanya aktif saat backend belum terpasang di dev)
- * Berlabel `isSimulated: true` secara eksplisit sesuai instruksi PRD Bagian 9 & 12.
- */
-function getSimulatedExtraction(request: ExtractionRequest): ExtractionResponse {
-  const text = request.text.toLowerCase();
-
-  // Kasus: Multiple Tasks
-  if (text.includes('sistem basis data') && text.includes('kalkulus') || (text.includes('tugas 1') && text.includes('tugas 2'))) {
-    return {
-      resultType: 'multiple_tasks',
-      warnings: ['Teks memuat lebih dari satu instruksi penugasan yang terpisah.'],
-      message: 'Terdapat beberapa tugas berbeda dalam satu pengumuman. Mohon pisahkan pengumuman agar pencatatan tugas akurat.',
-      isSimulated: true,
-    };
-  }
-
-  // Kasus: No Task (Obrolan biasa tanpa tugas)
-  if (!text.includes('tugas') && !text.includes('kumpulkan') && !text.includes('deadline') && !text.includes('project') && !text.includes('makalah')) {
-    return {
-      resultType: 'no_task',
-      message: 'Tugas tidak ditemukan dalam pengumuman ini. Silakan periksa kembali teks yang ditempel atau gunakan Tambah Manual.',
-      isSimulated: true,
-    };
-  }
-
-  // Kasus: Ambiguous Deadline ("Jumat depan", "besok" tanpa sourceMessageDate)
-  const isAmbiguous = text.includes('jumat depan') || (text.includes('besok') && !request.sourceMessageDate);
-
-  // Parsing demonstrasi cerdas sesuai contoh PRD Bagian 13
-  let title = 'Tugas Desain Wireframe Aplikasi Perpustakaan';
-  let course: string | null = 'UI/UX';
-  let description = 'Membuat wireframe aplikasi perpustakaan secara berkelompok dan dikumpulkan melalui LMS.';
-  let dueDate: string | null = '2026-10-21';
-  let dueTime: string | null = '23:59';
-  const requirements: string[] = ['Format berkas PDF', 'Maksimal 3 anggota per kelompok', 'Kumpul via LMS'];
-
-  if (text.includes('basis data')) {
-    title = 'Perancangan ERD Sistem Basis Data';
-    course = 'Sistem Basis Data';
-    description = 'Tugas perancangan Entity Relationship Diagram untuk studi kasus perpustakaan.';
-  } else if (text.includes('metodologi') || text.includes('proposal')) {
-    title = 'Penyusunan Proposal Metodologi Penelitian';
-    course = 'Metodologi Penelitian';
-    description = 'Menyusun Bab 1 sampai Bab 3 proposal penelitian kuantitatif.';
-  }
-
-  if (isAmbiguous) {
-    dueDate = null;
-    dueTime = null;
-  }
-
-  return {
-    resultType: 'task',
-    draft: {
-      title,
-      course,
-      description,
-      dueDate,
-      dueTime,
-      sourceTimezone: text.includes('wib') ? 'WIB (UTC+7)' : null,
-      requirements,
-      isAmbiguousDeadline: isAmbiguous,
-      ambiguityReason: isAmbiguous ? 'Tenggat waktu menyebutkan istilah relatif tanpa acuan tanggal pasti.' : undefined,
-    },
-    warnings: isAmbiguous ? ['Tenggat waktu ambigu, harap pastikan tanggal dengan dosen atau simpan tanpa deadline.'] : undefined,
-    criticalFieldEvidence: {
-      title: 'buat wireframe aplikasi perpustakaan',
-      deadline: dueDate ? '21 Oktober 2026 pukul 23.59 WIB' : 'Jumat depan',
-      requirements: 'Maksimal 3 anggota per kelompok. Kumpulkan PDF',
-    },
-    isSimulated: true,
-  };
+export interface ExtractionServiceOptions {
+  useMock?: boolean;
+  signal?: AbortSignal;
 }
 
 /**
- * Service pemanggilan backend ekstraksi pengumuman
- * Mendukung AbortController, batas waktu 30 detik, serta isolasi fallback
+ * Service Pemanggilan Backend Ekstraksi Pengumuman (POST /api/extract-task)
+ * 
+ * Aturan Produksi (PRD Bagian 9 & Instruksi Kerja):
+ * 1. Produksi memanggil kontrak endpoint /api/extract-task milik member Gemini Extraction.
+ * 2. DILARANG fallback diam-diam ke hasil simulasi saat API gagal!
+ * 3. Batas waktu timeout aplikasi adalah 30 detik.
+ * 4. Input divalidasi ketat (tidak kosong, maks 5.000 karakter).
  */
 export async function extractTaskFromAnnouncement(
   request: ExtractionRequest,
-  externalSignal?: AbortSignal
+  options?: ExtractionServiceOptions
 ): Promise<ExtractionResponse> {
-  // Validasi lokal sebelum pemanggilan
+  // 1. Validasi Input Klien Sebelum Pemanggilan
   const trimmed = request.text.trim();
   if (!trimmed) {
     const error: ExtractionErrorState = {
@@ -106,15 +42,21 @@ export async function extractTaskFromAnnouncement(
     throw error;
   }
 
-  // Setup timeout 30 detik
+  // 2. Jika opsi useMock diaktifkan secara eksplisit (untuk testing/offline fixture berlabel)
+  if (options?.useMock) {
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    return getSimulatedExtraction(request);
+  }
+
+  // 3. Jalur Produksi Murni (Memanggil POST /api/extract-task)
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
     controller.abort('TIMEOUT');
   }, DEFAULT_TIMEOUT_MS);
 
-  // Hubungkan sinyal eksternal jika ada pembatalan dari user
-  if (externalSignal) {
-    externalSignal.addEventListener('abort', () => {
+  // Sambungkan sinyal abort eksternal pengguna jika ada
+  if (options?.signal) {
+    options.signal.addEventListener('abort', () => {
       controller.abort('USER_ABORT');
     });
   }
@@ -132,6 +74,7 @@ export async function extractTaskFromAnnouncement(
     clearTimeout(timeoutId);
 
     if (!response.ok) {
+      // Penanganan HTTP Status Code Spesifik (PRD Bagian 9)
       if (response.status === 429) {
         const error: ExtractionErrorState = {
           type: 'RATE_LIMIT_OR_QUOTA',
@@ -152,7 +95,7 @@ export async function extractTaskFromAnnouncement(
 
       const error: ExtractionErrorState = {
         type: 'INVALID_RESPONSE',
-        message: 'Terjadi gangguan internal saat memproses ekstraksi di server.',
+        message: 'Terjadi gangguan internal saat memproses ekstraksi di server Gemini.',
         actionableHint: 'Silakan coba lagi atau masukkan tugas secara manual.',
       };
       throw error;
@@ -163,38 +106,32 @@ export async function extractTaskFromAnnouncement(
   } catch (err: unknown) {
     clearTimeout(timeoutId);
 
-    // Tangani pembatalan oleh pengguna
-    if (externalSignal?.aborted || (err instanceof Error && err.name === 'AbortError' && controller.signal.reason === 'USER_ABORT')) {
+    // Tangani pembatalan manual oleh pengguna
+    if (options?.signal?.aborted || (err instanceof Error && err.name === 'AbortError' && controller.signal.reason === 'USER_ABORT')) {
       throw new Error('USER_ABORT');
     }
 
-    // Tangani timeout 30 detik
+    // Tangani batas waktu timeout 30 detik
     if (controller.signal.reason === 'TIMEOUT' || (err instanceof Error && err.name === 'AbortError' && controller.signal.reason === 'TIMEOUT')) {
       const error: ExtractionErrorState = {
         type: 'TIMEOUT',
         message: 'Waktu tunggu pemrosesan melebihi batas 30 detik.',
-        actionableHint: 'Koneksi ke Gemini memerlukan waktu lebih lama dari biasanya. Silakan coba lagi.',
+        actionableHint: 'Koneksi ke server Gemini memerlukan waktu lebih lama dari biasanya. Silakan coba lagi atau gunakan Tambah Manual.',
       };
       throw error;
     }
 
-    // Jika terjadi Network Error / backend belum berjalan saat dev, aktifkan fallback berlabel simulasi
-    if (err instanceof TypeError) {
-      // Di environment pengembangan frontend tanpa backend lokal aktif
-      await new Promise((resolve) => setTimeout(resolve, 50)); // Latensi simulasi alami
-      return getSimulatedExtraction(request);
-    }
-
-    // Re-throw jika error terstruktur sudah terbentuk
+    // Jika error sudah terstruktur, teruskan langsung
     if (typeof err === 'object' && err !== null && 'type' in err) {
       throw err;
     }
 
-    const error: ExtractionErrorState = {
+    // Error Jaringan / Network Failure: TIDAK ADA FALLBACK DIAM-DIAM KE SIMULASI!
+    const networkError: ExtractionErrorState = {
       type: 'NETWORK_ERROR',
-      message: 'Gagal terhubung ke layanan ekstraksi tugas.',
-      actionableHint: 'Periksa koneksi internet Anda atau gunakan tombol Tambah Manual.',
+      message: 'Gagal terhubung ke endpoint backend ekstraksi (/api/extract-task).',
+      actionableHint: 'Periksa koneksi jaringan atau pastikan backend ekstraksi telah aktif. Anda dapat mencoba lagi atau menggunakan Tambah Manual.',
     };
-    throw error;
+    throw networkError;
   }
 }

@@ -2,7 +2,7 @@
  * Model Data Tugas TugasIn (Sesuai PRD Bagian 9)
  */
 
-export type TaskStatus = 'not_started' | 'dikerjakan' | 'selesai';
+export type TaskStatus = 'not_started' | 'in_progress' | 'done' | 'dikerjakan' | 'selesai';
 
 export interface TaskChecklistItem {
   id: string;
@@ -16,7 +16,7 @@ export interface Task {
   title: string;                    // Wajib, maks 150 karakter
   course: string | null;            // Maks 100 karakter
   description: string;
-  sourceText: string;               // Teks pengumuman asli
+  sourceText: string;               // Teks pengumuman asli (kosong jika input manual)
   sourceMessageDate: string | null; // Format YYYY-MM-DD
   dueDate: string | null;           // Format YYYY-MM-DD
   dueTime: string | null;           // Format HH:mm (hanya ada jika dueDate ada)
@@ -42,4 +42,5 @@ export interface TaskDraft {
   requirements: string[];
   isAmbiguousDeadline?: boolean;
   ambiguityReason?: string;
+  ambiguityType?: 'relative_no_source_date' | 'ambiguous_relative_phrase' | 'no_year' | 'conflicting_deadlines';
 }

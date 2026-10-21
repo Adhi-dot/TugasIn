@@ -2,22 +2,26 @@ import { useState, useRef, useCallback } from 'react';
 import { ExtractionRequest, ExtractionResponse, ExtractionErrorState } from '../types/extraction';
 import { extractTaskFromAnnouncement } from '../services/extractionService';
 
+export interface UseExtractionOptions {
+  useMock?: boolean;
+}
+
 export interface UseExtractionReturn {
   isLoading: boolean;
   error: ExtractionErrorState | null;
   result: ExtractionResponse | null;
-  extract: (request: ExtractionRequest) => Promise<ExtractionResponse | null>;
+  extract: (request: ExtractionRequest, overrideOptions?: { useMock?: boolean }) => Promise<ExtractionResponse | null>;
   cancelExtraction: () => void;
   clearError: () => void;
   resetResult: () => void;
 }
 
-export function useExtraction(): UseExtractionReturn {
+export function useExtraction(options?: UseExtractionOptions): UseExtractionReturn {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<ExtractionErrorState | null>(null);
   const [result, setResult] = useState<ExtractionResponse | null>(null);
 
-  // Menyimpan id request aktif untuk mencegah late-arrival response menimpa state terbaru
+  // Menyimpan id request aktif untuk mencegah stale response / race condition menimpa state
   const currentRequestIdRef = useRef<number>(0);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -38,8 +42,8 @@ export function useExtraction(): UseExtractionReturn {
   }, []);
 
   const extract = useCallback(
-    async (request: ExtractionRequest): Promise<ExtractionResponse | null> => {
-      // Batalkan request yang sedang berlangsung jika ada (cegah race condition / double request)
+    async (request: ExtractionRequest, overrideOptions?: { useMock?: boolean }): Promise<ExtractionResponse | null> => {
+      // Batalkan request sebelumnya jika sedang berlangsung (cegah race condition / double request)
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -52,7 +56,10 @@ export function useExtraction(): UseExtractionReturn {
       setError(null);
 
       try {
-        const response = await extractTaskFromAnnouncement(request, newAbortController.signal);
+        const response = await extractTaskFromAnnouncement(request, {
+          signal: newAbortController.signal,
+          useMock: overrideOptions?.useMock ?? options?.useMock ?? false,
+        });
 
         // Abaikan respons jika id request sudah bukan yang terbaru (late-arrival protection)
         if (requestId !== currentRequestIdRef.current) {
@@ -80,14 +87,14 @@ export function useExtraction(): UseExtractionReturn {
           setError({
             type: 'UNKNOWN_ERROR',
             message: 'Terjadi kesalahan yang tidak terduga saat mengekstrak tugas.',
-            actionableHint: 'Silakan coba lagi beberapa saat lagi.',
+            actionableHint: 'Silakan coba lagi beberapa saat lagi atau masukkan tugas secara manual.',
           });
         }
 
         return null;
       }
     },
-    []
+    [options?.useMock]
   );
 
   return {

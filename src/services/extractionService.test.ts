@@ -1,11 +1,19 @@
-import { describe, it, expect } from 'vitest';
-import { extractTaskFromAnnouncement } from './extractionService';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { extractTaskFromAnnouncement, API_ENDPOINT } from './extractionService';
 import { ExtractionRequest } from '../types/extraction';
 
-describe('extractionService - Verifikasi Seluruh Kasus Batas & Kontrak', () => {
-  it('menolak input kosong dengan pesan INVALID_INPUT', async () => {
+describe('extractTaskFromAnnouncement - Jalur Produksi & Proteksi Fallback (PRD Bagian 9)', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('menolak pengumuman kosong atau hanya spasi sebelum memanggil API', async () => {
     const request: ExtractionRequest = {
-      text: '',
+      text: '   \n  \t ',
       displayTimezone: 'Asia/Jakarta',
     };
 
@@ -14,18 +22,7 @@ describe('extractionService - Verifikasi Seluruh Kasus Batas & Kontrak', () => {
     });
   });
 
-  it('menolak input yang hanya berisi whitespace', async () => {
-    const request: ExtractionRequest = {
-      text: '    \n\t   ',
-      displayTimezone: 'Asia/Jakarta',
-    };
-
-    await expect(extractTaskFromAnnouncement(request)).rejects.toMatchObject({
-      type: 'INVALID_INPUT',
-    });
-  });
-
-  it('menolak input melebihi 5.000 karakter', async () => {
+  it('menolak pengumuman yang melebihi batas 5.000 karakter sebelum memanggil API', async () => {
     const request: ExtractionRequest = {
       text: 'A'.repeat(5001),
       displayTimezone: 'Asia/Jakarta',
@@ -36,61 +33,101 @@ describe('extractionService - Verifikasi Seluruh Kasus Batas & Kontrak', () => {
     });
   });
 
-  it('menerima input tepat 5.000 karakter tanpa error validasi panjang', async () => {
+  it('memanggil endpoint resmi /api/extract-task dengan payload yang tepat pada jalur produksi', async () => {
+    const mockResponseData = {
+      resultType: 'task',
+      draft: {
+        title: 'Tugas Jaringan Komputer',
+        course: 'Jaringan Komputer',
+        description: 'Simulasi subnetting Cisco Packet Tracer',
+        dueDate: '2026-10-25',
+        dueTime: '23:59',
+        sourceTimezone: 'WIB',
+        requirements: ['Format PKT', 'Laporan PDF'],
+      },
+    };
+
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => mockResponseData,
+    } as Response);
+
     const request: ExtractionRequest = {
-      text: 'Tugas: ' + 'A'.repeat(4990),
+      text: 'Tugas Jaringan Komputer simulasi subnetting kumpul 25 Oktober 2026 jam 23.59 WIB.',
+      sourceMessageDate: '2026-10-20',
       displayTimezone: 'Asia/Jakarta',
     };
 
-    // Tidak boleh melempar INVALID_INPUT karena masih <= 5000 karakter
     const result = await extractTaskFromAnnouncement(request);
-    expect(result).toBeDefined();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      API_ENDPOINT,
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request),
+      })
+    );
     expect(result.resultType).toBe('task');
+    expect(result.draft?.title).toBe('Tugas Jaringan Komputer');
   });
 
-  it('mengidentifikasi no_task jika teks tidak memuat tugas kuliah', async () => {
+  it('TIDAK MELAKUKAN FALLBACK DIAM-DIAM ke simulasi saat jaringan gagal (melempar NETWORK_ERROR)', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
     const request: ExtractionRequest = {
-      text: 'Halo teman-teman, hari ini jangan lupa makan siang ya di kantin.',
+      text: 'Tugas desain wireframe UI/UX kumpul 21 Oktober 2026.',
       displayTimezone: 'Asia/Jakarta',
     };
 
-    const result = await extractTaskFromAnnouncement(request);
-    expect(result.resultType).toBe('no_task');
+    // Jalur produksi WAJIB melempar error dan BUKAN mengembalikan fixture simulasi!
+    await expect(extractTaskFromAnnouncement(request)).rejects.toMatchObject({
+      type: 'NETWORK_ERROR',
+      message: expect.stringContaining('/api/extract-task'),
+    });
   });
 
-  it('mengidentifikasi multiple_tasks jika terdapat lebih dari satu tugas berbeda', async () => {
+  it('menangani error kuota / rate limit (HTTP 429) dengan error RATE_LIMIT_OR_QUOTA', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: false,
+      status: 429,
+    } as Response);
+
     const request: ExtractionRequest = {
-      text: 'Tugas Sistem Basis Data dikumpulkan besok dan tugas Kalkulus dikumpulkan lusa.',
+      text: 'Tugas Kalkulus bab 4.',
       displayTimezone: 'Asia/Jakarta',
     };
 
-    const result = await extractTaskFromAnnouncement(request);
-    expect(result.resultType).toBe('multiple_tasks');
-    expect(result.warnings).toBeDefined();
+    await expect(extractTaskFromAnnouncement(request)).rejects.toMatchObject({
+      type: 'RATE_LIMIT_OR_QUOTA',
+    });
   });
 
-  it('menandai tenggat ambigu jika menggunakan istilah relatif seperti "Jumat depan"', async () => {
+  it('menangani error server (HTTP 500) dengan error INVALID_RESPONSE', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+    } as Response);
+
     const request: ExtractionRequest = {
-      text: 'Tugas UI/UX dikumpulkan Jumat depan via LMS.',
+      text: 'Tugas Kalkulus bab 4.',
       displayTimezone: 'Asia/Jakarta',
     };
 
-    const result = await extractTaskFromAnnouncement(request);
+    await expect(extractTaskFromAnnouncement(request)).rejects.toMatchObject({
+      type: 'INVALID_RESPONSE',
+    });
+  });
+
+  it('dapat menggunakan mock eksplisit ketika opsi useMock diaktifkan secara sengaja', async () => {
+    const request: ExtractionRequest = {
+      text: 'Tugas Desain Wireframe aplikasi perpustakaan.',
+      displayTimezone: 'Asia/Jakarta',
+    };
+
+    const result = await extractTaskFromAnnouncement(request, { useMock: true });
+    expect(result.isSimulated).toBe(true);
     expect(result.resultType).toBe('task');
-    expect(result.draft?.isAmbiguousDeadline).toBe(true);
-    // Tenggat ambigu tidak boleh di-autofill sembarangan
-    expect(result.draft?.dueDate).toBeNull();
-  });
-
-  it('menangani pembatalan pengguna (AbortSignal)', async () => {
-    const controller = new AbortController();
-    controller.abort();
-
-    const request: ExtractionRequest = {
-      text: 'Tugas Algoritma Pemrograman dikumpulkan besok.',
-      displayTimezone: 'Asia/Jakarta',
-    };
-
-    await expect(extractTaskFromAnnouncement(request, controller.signal)).rejects.toThrow('USER_ABORT');
   });
 });

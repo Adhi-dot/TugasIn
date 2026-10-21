@@ -1,226 +1,118 @@
-import React, { useState } from 'react';
-import { HeroSection } from './components/features/input/HeroSection';
-import { AnnouncementInputForm } from './components/features/input/AnnouncementInputForm';
-import { TaskPreviewModal } from './components/features/preview/TaskPreviewModal';
-import { FeedbackBanner } from './components/features/feedback/FeedbackBanner';
-import { useExtraction } from './hooks/useExtraction';
-import { Task, TaskDraft } from './types/task';
-import { ExtractionRequest } from './types/extraction';
-import { CheckIcon, CalendarIcon } from './components/ui/icons';
+import React, { useState, useEffect } from 'react';
+import { AnnouncementInputAndPreview } from './components/features/input-preview';
+import { Task } from './types/task';
+import { CalendarIcon, CheckIcon } from './components/ui/icons';
+
+const LOCAL_STORAGE_KEY = 'tugasin_tasks';
 
 export const App: React.FC = () => {
-  const {
-    isLoading,
-    error,
-    result,
-    extract,
-    clearError,
-    resetResult,
-  } = useExtraction();
+  // Persistence state bersama sesuai PRD Bagian 4 & US-06
+  const [tasks, setTasks] = useState<Task[]>(() => {
+    try {
+      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
 
-  // State untuk alur penyimpanan tugas dan navigasi
-  const [activeDraft, setActiveDraft] = useState<TaskDraft | null>(null);
-  const [activeSourceText, setActiveSourceText] = useState<string>('');
-  const [activeDisplayTimezone, setActiveDisplayTimezone] = useState<string>('Asia/Jakarta');
-  const [activeSourceDate, setActiveSourceDate] = useState<string | null>(null);
+  // Sinkronkan ke localStorage setiap ada perubahan tugas
+  useEffect(() => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(tasks));
+    } catch (e) {
+      console.warn('Gagal menyimpan ke localStorage:', e);
+    }
+  }, [tasks]);
 
-  // List tugas tersimpan (mempertahankan data tugas yang berhasil disimpan via alur Input & Preview)
-  const [savedTasks, setSavedTasks] = useState<Task[]>([]);
-  const [successToast, setSuccessToast] = useState<string | null>(null);
-  const [lastRequest, setLastRequest] = useState<ExtractionRequest | null>(null);
-
-  // Handler eksekusi ekstraksi dari form input
-  const handleExtract = async (request: ExtractionRequest) => {
-    setLastRequest(request);
-    clearError();
-    resetResult();
-
-    const response = await extract(request);
-    if (response) {
-      if (response.resultType === 'task' && response.draft) {
-        setActiveDraft(response.draft);
-        setActiveSourceText(request.text);
-        setActiveDisplayTimezone(request.displayTimezone);
-        setActiveSourceDate(request.sourceMessageDate || null);
-      }
+  // Handler integrasi onSaveTask (Kontrak bersama untuk modul Task Management)
+  const handleSaveTask = async (newTask: Task): Promise<boolean> => {
+    try {
+      setTasks((prev) => [newTask, ...prev]);
+      return true;
+    } catch {
+      return false;
     }
   };
 
-  // Handler coba lagi (Retry) saat terjadi kegagalan jaringan atau timeout
-  const handleRetry = () => {
-    if (lastRequest) {
-      handleExtract(lastRequest);
-    }
-  };
-
-  // Handler simpan tugas tervalidasi (Kontrak integrasi dengan member task management)
-  const handleSaveTask = async (validatedDraft: TaskDraft, sourceText: string): Promise<boolean> => {
-    // Simulasi pembuatan ID dan timestamp oleh lapisan aplikasi
-    const newTask: Task = {
-      id: `task-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      title: validatedDraft.title,
-      course: validatedDraft.course,
-      description: validatedDraft.description,
-      sourceText: sourceText,
-      sourceMessageDate: activeSourceDate,
-      dueDate: validatedDraft.dueDate,
-      dueTime: validatedDraft.dueTime,
-      sourceTimezone: validatedDraft.sourceTimezone,
-      displayTimezone: activeDisplayTimezone,
-      requirements: validatedDraft.requirements,
-      status: 'not_started',
-      checklist: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    // Tepat satu tugas disimpan ke list
-    setSavedTasks((prev) => [newTask, ...prev]);
-
-    // Tutup modal preview dan tampilkan notifikasi keberhasilan
-    setActiveDraft(null);
-    setSuccessToast(`Tugas "${newTask.title}" berhasil disimpan ke sistem!`);
-    setTimeout(() => setSuccessToast(null), 4000);
-
-    return true;
-  };
-
-  // Handler pembatalan preview
-  const handleCancelPreview = () => {
-    setActiveDraft(null);
-  };
-
-  // Handler navigasi tambah manual
   const handleManualAdd = () => {
-    alert('Jalur Tambah Manual: Terhubung dengan modul formulir manual (Member Pengelolaan Tugas).');
+    alert('Navigasi ke Modal Tambah Manual (Dikelola oleh Member Pengelolaan Tugas).');
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-canvas text-ink">
       {/* Top Navigation Bar */}
-      <header className="border-b border-hairline bg-surface sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md border-b border-hairline py-3 px-4 sm:px-8">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-brand-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+            <div className="w-9 h-9 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
               T
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-base tracking-tight text-ink">TugasIn</span>
-                <span className="hidden sm:inline-block text-[11px] font-medium text-brand-700 bg-brand-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                  Dari chat jadi checklist
-                </span>
-              </div>
+              <span className="text-base font-bold tracking-tight text-ink">TugasIn</span>
+              <span className="hidden sm:inline-block ml-2 text-[11px] font-medium text-brand-700 bg-brand-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                Dari chat jadi checklist
+              </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="hidden md:inline-flex items-center gap-1.5 text-xs text-ink-muted bg-surface-subtle px-3 py-1.5 rounded-full border border-hairline">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Semester Ganjil 2024/2025
-            </span>
-
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleManualAdd}
-              className="text-xs font-semibold text-ink-muted hover:text-ink bg-surface border border-hairline hover:bg-slate-50 px-3.5 py-1.5 rounded-input transition-colors"
+              className="text-xs font-semibold px-3 py-1.5 rounded-input border border-hairline hover:bg-slate-50 transition-colors text-ink"
             >
-              + Tambah manual
+              + Tambah Manual
             </button>
+            <div className="text-xs text-ink-muted pl-2 border-l border-hairline">
+              Tugas Aktif: <strong className="text-brand-700 font-bold">{tasks.length}</strong>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-8 w-full">
-        {/* Toast Notifikasi Berhasil */}
-        {successToast && (
-          <div className="mb-6 bg-brand-50 border border-emerald-200 text-brand-700 px-4 py-3 rounded-card text-sm flex items-center justify-between shadow-sm animate-in fade-in duration-200">
-            <div className="flex items-center gap-2">
-              <CheckIcon className="w-4 h-4 text-brand-600" />
-              <span>{successToast}</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setSuccessToast(null)}
-              className="text-brand-600 hover:text-brand-800 text-xs font-medium"
-            >
-              Tutup
-            </button>
-          </div>
-        )}
-
-        {/* Hero Section */}
-        <HeroSection />
-
-        {/* Feedback Alert Banners (no_task, multiple_tasks, error timeout, dsb) */}
-        <FeedbackBanner
-          resultType={result?.resultType}
-          error={error}
-          onRetry={handleRetry}
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-8 py-8">
+        {/* Modul Utama: Input Pengumuman & Preview Hasil Ekstraksi */}
+        <AnnouncementInputAndPreview
+          onSaveTask={handleSaveTask}
           onManualAdd={handleManualAdd}
-          onDismiss={() => {
-            clearError();
-            resetResult();
-          }}
-          className="mb-6"
         />
 
-        {/* Announcement Input Form (Fitur Utama FR-01) */}
-        <AnnouncementInputForm
-          onExtract={handleExtract}
-          isLoading={isLoading}
-          onManualAdd={handleManualAdd}
-          className="mb-10"
-        />
-
-        {/* Daftar Tugas yang Baru Tersimpan (Visualisasi Hasil Simpan FR-02) */}
-        {savedTasks.length > 0 && (
+        {/* Section Demonstrasi Tugas Tersimpan (Koleksi yang berhasil disimpan dari alur Preview) */}
+        {tasks.length > 0 && (
           <section className="mt-12 pt-8 border-t border-hairline">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-lg font-bold text-ink">Tugas Tersimpan ({savedTasks.length})</h3>
-                <p className="text-xs text-ink-muted">Hasil tugas dari ekstraksi pengumuman yang telah disetujui</p>
+                <h3 className="text-sm font-bold text-ink">Daftar Tugas Baru Tersimpan</h3>
+                <p className="text-xs text-ink-muted">Tugas yang baru saja disimpan melalui modul Preview (Siap diproses modul Dashboard & Checklist).</p>
               </div>
+              <span className="text-xs text-ink-subtle">{tasks.length} tugas tersimpan di memori</span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {savedTasks.map((t) => (
-                <div key={t.id} className="bg-surface rounded-card border border-hairline p-5 shadow-sm space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <h4 className="font-semibold text-sm text-ink leading-snug">{t.title}</h4>
-                    {t.course && (
-                      <span className="text-[11px] font-medium bg-surface-subtle text-ink-muted px-2 py-0.5 rounded border border-hairline flex-shrink-0">
-                        {t.course}
-                      </span>
-                    )}
-                  </div>
-
-                  <p className="text-xs text-ink-muted line-clamp-2 leading-relaxed">{t.description}</p>
-
-                  <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-hairline text-xs">
-                    <div className="flex items-center gap-1.5 text-ink-muted">
-                      <CalendarIcon className="w-3.5 h-3.5 text-ink-subtle" />
-                      <span>
-                        {t.dueDate ? (
-                          <>
-                            {t.dueDate} {t.dueTime ? `pukul ${t.dueTime}` : '(Jam tidak disebutkan)'}
-                          </>
-                        ) : (
-                          <span className="text-amber-700 italic">Belum ada deadline</span>
-                        )}
-                      </span>
-                    </div>
-
-                    <span className="text-[11px] text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full font-medium">
-                      {t.status === 'not_started' ? 'Belum mulai' : t.status}
+              {tasks.map((task) => (
+                <div key={task.id} className="bg-surface rounded-card border border-hairline p-4 shadow-sm hover:border-slate-300 transition-colors">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <span className="text-xs font-bold text-brand-700 bg-brand-50 border border-emerald-100 px-2 py-0.5 rounded">
+                      {task.course || 'Umum'}
+                    </span>
+                    <span className="text-[11px] text-ink-subtle flex items-center gap-1">
+                      <CalendarIcon className="w-3 h-3 text-slate-400" />
+                      {task.dueDate ? `${task.dueDate} ${task.dueTime ? `· ${task.dueTime}` : ''}` : 'Belum ada deadline'}
                     </span>
                   </div>
 
-                  {t.requirements.length > 0 && (
-                    <div className="flex flex-wrap gap-1 pt-1">
-                      {t.requirements.map((req, idx) => (
-                        <span key={idx} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
+                  <h4 className="text-sm font-bold text-ink mb-1.5">{task.title}</h4>
+                  {task.description && (
+                    <p className="text-xs text-ink-muted line-clamp-2 mb-3">{task.description}</p>
+                  )}
+
+                  {task.requirements.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-2 border-t border-hairline">
+                      {task.requirements.map((req, idx) => (
+                        <span key={idx} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <CheckIcon className="w-2.5 h-2.5 text-brand-600" />
                           {req}
                         </span>
                       ))}
@@ -233,31 +125,9 @@ export const App: React.FC = () => {
         )}
       </main>
 
-      {/* Task Preview Modal (Fitur Utama FR-02) */}
-      {activeDraft && (
-        <TaskPreviewModal
-          draft={activeDraft}
-          sourceText={activeSourceText}
-          sourceMessageDate={activeSourceDate}
-          displayTimezone={activeDisplayTimezone}
-          warnings={result?.warnings}
-          criticalFieldEvidence={result?.criticalFieldEvidence}
-          onSave={handleSaveTask}
-          onCancel={handleCancelPreview}
-        />
-      )}
-
       {/* Footer */}
-      <footer className="border-t border-hairline bg-surface py-6 mt-auto">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between gap-4 text-xs text-ink-muted">
-          <div>
-            © 2026 TugasIn — Platform Otomasi Tugas Mahasiswa. Dibuat dengan Gemini AI.
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="hover:text-ink cursor-pointer">Panduan Format</span>
-            <span className="hover:text-ink cursor-pointer">Privasi & Keamanan Data</span>
-          </div>
-        </div>
+      <footer className="border-t border-hairline py-6 px-4 text-center text-xs text-ink-subtle bg-surface">
+        <p>TugasIn MVP — Otomatisasi Kerja & Kuliah Mahasiswa. Dibuat sesuai PRD Versi 1.0.</p>
       </footer>
     </div>
   );

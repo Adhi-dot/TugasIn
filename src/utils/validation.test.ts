@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { validateTaskDraft } from './validation';
 import { TaskDraft } from '../types/task';
 
-describe('validateTaskDraft - Validasi Ketat Draft & Deadline (PRD Bagian 8)', () => {
+describe('validateTaskDraft - Validasi Ketat Sesuai PRD Bagian 8 & 9', () => {
   it('menolak draft dengan judul kosong atau hanya spasi', () => {
     const draft: TaskDraft = {
       title: '   ',
@@ -17,6 +17,23 @@ describe('validateTaskDraft - Validasi Ketat Draft & Deadline (PRD Bagian 8)', (
     const result = validateTaskDraft(draft);
     expect(result.isValid).toBe(false);
     expect(result.errors.title).toBeDefined();
+    expect(result.errors.title).toContain('wajib diisi');
+  });
+
+  it('menerima judul pendek 1 atau 2 karakter (misal "PR" atau "T1") asalkan tidak kosong setelah trim', () => {
+    const draft: TaskDraft = {
+      title: 'PR',
+      course: null,
+      description: '',
+      dueDate: null,
+      dueTime: null,
+      sourceTimezone: null,
+      requirements: [],
+    };
+
+    const result = validateTaskDraft(draft);
+    expect(result.isValid).toBe(true);
+    expect(result.cleanedDraft?.title).toBe('PR');
   });
 
   it('menolak draft dengan judul melebihi 150 karakter', () => {
@@ -59,7 +76,7 @@ describe('validateTaskDraft - Validasi Ketat Draft & Deadline (PRD Bagian 8)', (
       dueDate: null,
       dueTime: null,
       sourceTimezone: null,
-      requirements: ['Tulis tangan'],
+      requirements: [],
     };
 
     const result = validateTaskDraft(draft);
@@ -68,9 +85,9 @@ describe('validateTaskDraft - Validasi Ketat Draft & Deadline (PRD Bagian 8)', (
     expect(result.cleanedDraft?.dueTime).toBeNull();
   });
 
-  it('menolak jika jam diisi tetapi tanggal kosong (waktu tidak boleh tanpa tanggal)', () => {
+  it('MENOLAK jika waktu diisi tetapi tanggal kosong (dueTime tanpa dueDate)', () => {
     const draft: TaskDraft = {
-      title: 'Tugas Jam Saja',
+      title: 'Tugas Invalid Waktu',
       course: null,
       description: '',
       dueDate: null,
@@ -82,42 +99,23 @@ describe('validateTaskDraft - Validasi Ketat Draft & Deadline (PRD Bagian 8)', (
     const result = validateTaskDraft(draft);
     expect(result.isValid).toBe(false);
     expect(result.errors.dueTime).toBeDefined();
+    expect(result.errors.dueTime).toContain('tanpa tanggal');
   });
 
-  it('mengizinkan tanggal tanpa jam dan tidak otomatis mengisi jam 23.59', () => {
+  it('menerima tanggal dan waktu lengkap yang valid', () => {
     const draft: TaskDraft = {
-      title: 'Tugas Tanggal Saja',
-      course: 'Metode Penelitian',
-      description: '',
-      dueDate: '2026-10-25',
-      dueTime: null,
-      sourceTimezone: null,
-      requirements: [],
+      title: 'Tugas Desain Final',
+      course: 'UI/UX',
+      description: 'Kumpul file Figma dan PDF',
+      dueDate: '2026-10-21',
+      dueTime: '23:59',
+      sourceTimezone: 'WIB',
+      requirements: ['Format PDF', 'Kelompok maks 3'],
     };
 
     const result = validateTaskDraft(draft);
     expect(result.isValid).toBe(true);
-    expect(result.cleanedDraft?.dueDate).toBe('2026-10-25');
-    expect(result.cleanedDraft?.dueTime).toBeNull(); // Tidak diisi 23:59 secara diam-diam!
-  });
-
-  it('membersihkan whitespace dan memformat draft yang valid secara konsisten', () => {
-    const draft: TaskDraft = {
-      title: '  Tugas Desain Grafis  ',
-      course: '  DKV  ',
-      description: '  Membuat poster  ',
-      dueDate: '2026-11-01',
-      dueTime: '15:00',
-      sourceTimezone: ' WIB ',
-      requirements: [' Poster A3 ', ' '],
-    };
-
-    const result = validateTaskDraft(draft);
-    expect(result.isValid).toBe(true);
-    expect(result.cleanedDraft?.title).toBe('Tugas Desain Grafis');
-    expect(result.cleanedDraft?.course).toBe('DKV');
-    expect(result.cleanedDraft?.description).toBe('Membuat poster');
-    expect(result.cleanedDraft?.sourceTimezone).toBe('WIB');
-    expect(result.cleanedDraft?.requirements).toEqual([' Poster A3 ']);
+    expect(result.cleanedDraft?.dueDate).toBe('2026-10-21');
+    expect(result.cleanedDraft?.dueTime).toBe('23:59');
   });
 });

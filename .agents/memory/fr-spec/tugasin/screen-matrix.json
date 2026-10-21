@@ -1,0 +1,16 @@
+{
+  "projectSlug": "tugasin",
+  "totalFRs": 1,
+  "totalScreens": 1,
+  "screens": [
+    {
+      "frId": "FR-01",
+      "screenId": "screen-01-dashboard",
+      "title": "Dashboard TugasIn — Dari chat jadi checklist",
+      "route": "/dashboard",
+      "purpose": "Memantau tugas aktif dan selesai, filter status, pengurutan deadline otomatis, dan ringkasan progres tugas mahasiswa.",
+      "primaryComponent": "DashboardView",
+      "stitchPromptBrief": "A modern, responsive Light-mode student task management dashboard for TugasIn ('Dari chat jadi checklist'). Clean white canvas (#FFFFFF) and slate-50 background, subtle border (#E2E8F0), crisp typography using Plus Jakarta Sans. Includes header with brand and action buttons '+ Tambah dari pengumuman' and '+ Tambah manual', a 2-card KPI summary showing 'Tugas Aktif' and 'Tugas Selesai', interactive status filter pills ('Semua', 'Belum mulai', 'Dikerjakan', 'Selesai'), and a multi-column task card grid. Each task card displays course badge, status badge in Indonesian, task title, clear deadline with overdue highlight or 'jam tidak disebutkan' label, and checklist completion progress bar. Accessible, semantic, mobile-first down to 360px."
+    }
+  ]
+}

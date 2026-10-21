@@ -10,12 +10,16 @@ export default {
         canvas: '#F8FAFC',
         surface: {
           DEFAULT: '#FFFFFF',
+          subdued: '#F1F5F9',
           subtle: '#F8FAFC',
           hover: '#F1F5F9',
         },
         'surface-subtle': '#F8FAFC',
         'surface-hover': '#F1F5F9',
-        border: '#E2E8F0',
+        border: {
+          DEFAULT: '#E2E8F0',
+          strong: '#CBD5E1',
+        },
         'border-strong': '#CBD5E1',
         hairline: {
           DEFAULT: '#E2E8F0',
@@ -36,6 +40,20 @@ export default {
           50: '#ECFDF5',
           600: '#059669',
           700: '#047857',
+        },
+        accent: {
+          DEFAULT: '#2563EB',
+          hover: '#1D4ED8',
+          soft: '#EFF6FF',
+          ink: '#1D4ED8',
+        },
+        success: {
+          DEFAULT: '#059669',
+          soft: '#ECFDF5',
+        },
+        danger: {
+          DEFAULT: '#E11D48',
+          soft: '#FFF1F2',
         },
         status: {
           'not-started-bg': '#F1F5F9',

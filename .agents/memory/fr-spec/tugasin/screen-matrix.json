@@ -1,7 +1,7 @@
 {
   "projectSlug": "tugasin",
-  "totalFRs": 3,
-  "totalScreens": 3,
+  "totalFRs": 6,
+  "totalScreens": 4,
   "screens": [
     {
       "frId": "FR-01",
@@ -29,6 +29,15 @@
       "purpose": "Ruang kerja komparasi 2-kolom antara teks pengumuman asli dan draft kartu tugas terstruktur hasil ekstraksi dengan koreksi field, indikator ambigu, validasi deadline, serta tombol simpan tugas",
       "primaryComponent": "TaskPreviewModal",
       "stitchPromptBrief": "A comprehensive two-column preview and validation workspace for reviewing extracted academic assignments. The left column displays the raw original Indonesian announcement text inside a clean slate container with subtle typography. The right column presents an editable structured form for task title, course name, date and time picker with 'Needs Completion' indicator badges for missing fields, timezone indicator, and assignment requirements chips. Bottom action bar has a ghost 'Batal' button and a bold emerald 'Simpan tugas' CTA button. Pristine light mode theme, WCAG compliant contrast, modern typography."
+    },
+    {
+      "frId": "FR-04, FR-05, FR-06",
+      "screenId": "screen-02-task-detail-checklist",
+      "title": "Detail Tugas & Checklist AI",
+      "route": "/tasks/:id",
+      "purpose": "Provide task inspection, explicit source requirements, and an interactive AI step-by-step checklist with progress tracking and editing.",
+      "primaryComponent": "TaskChecklist",
+      "stitchPromptBrief": "A modern, high-craft light mode task detail interface for Indonesian college students. Clean slate-50 background with crisp white cards and slate-200 hairline borders. Header displays task title, course badge, and deadline info. Below is a section for 'Ketentuan dari pengumuman' followed by a dedicated 'Langkah Pengerjaan (Saran AI)' card. The AI checklist includes a fractional completion counter (e.g. '3 dari 5 selesai'), animated progress bar, checklist items with custom rounded checkboxes and hover-visible edit triggers, an active inline editing mode, a friendly regenerate button with warning tooltip, and clear empty, loading skeleton, and error retry states. Academic productivity aesthetic with deep slate text and purposeful indigo-blue accent."
     }
   ]
 }

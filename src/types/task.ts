@@ -3,18 +3,15 @@
  * Aligned with PRD-TugasIn.md Section 9 & AGENTS.md
  */
 
+import { ChecklistItemData, ChecklistOrigin } from './checklist';
+
 export type TaskStatus = 'not_started' | 'in_progress' | 'done';
 
 export type TaskFilter = 'all' | 'not_started' | 'in_progress' | 'done';
 
-export type ChecklistOrigin = 'ai' | 'manual';
+export type { ChecklistOrigin };
 
-export interface ChecklistItem {
-  id: string;
-  text: string;
-  completed: boolean;
-  origin: ChecklistOrigin;
-}
+export type ChecklistItem = ChecklistItemData;
 
 // Alias untuk kompatibilitas ke belakang
 export type TaskChecklistItem = ChecklistItem;

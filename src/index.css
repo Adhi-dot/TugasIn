@@ -6,6 +6,7 @@
   /* Surface & Canvas Tokens */
   --color-canvas: #F8FAFC;
   --color-surface: #FFFFFF;
+  --color-surface-subdued: #F1F5F9;
   --color-surface-subtle: #F1F5F9;
 
   /* Structure & Ink Tokens */
@@ -17,14 +18,29 @@
   --color-ink-secondary: #475569;
   --color-ink-muted: #64748B;
   --color-ink-subtle: #94A3B8;
+  --color-ink-faint: #94A3B8;
 
   /* Brand Accents */
   --color-brand-primary: #4F46E5;
+  --color-brand-hover: #4338CA;
+  --color-brand-light: #EEF2FF;
   --color-primary: #059669;
   --color-primary-hover: #047857;
   --color-primary-light: #ECFDF5;
+
+  /* AI Accent (Checklist) */
+  --color-accent: #2563EB;
+  --color-accent-hover: #1D4ED8;
+  --color-accent-soft: #EFF6FF;
+  --color-accent-ink: #1D4ED8;
+
+  /* Status Colors */
+  --color-success: #059669;
+  --color-success-soft: #ECFDF5;
   --color-warning: #D97706;
   --color-warning-light: #FFFBEB;
+  --color-danger: #E11D48;
+  --color-danger-soft: #FFF1F2;
   --color-error: #DC2626;
   --color-error-light: #FEF2F2;
 
@@ -44,9 +60,9 @@
 body {
   margin: 0;
   padding: 0;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--color-canvas);
   color: var(--color-ink-primary);
-  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 /* Custom scrollbar for clean reading */

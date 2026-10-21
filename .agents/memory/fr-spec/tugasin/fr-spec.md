@@ -1,24 +1,25 @@
-# Functional Requirements Specification (FR-Spec)
+# Functional Requirements Specification (FR-Spec) — TugasIn
+
 **Project:** TugasIn — Platform Otomasi Tugas Mahasiswa (“Dari chat jadi checklist”)  
 **Project Slug:** `tugasin`  
-**Fitur / Modul:** Dashboard Pemantauan, Input Pengumuman & Preview Hasil Ekstraksi  
-**Total FRs:** 3  
-**Total Target UI Screens:** 3 (1:1 Ratio Guaranteed)  
-**Dokumen Acuan:** `PRD-TugasIn.md` (Bagian 5, 6, 7 US-01, US-02, US-03, US-04, 8, 9, 10) dan `AGENTS.md`  
+**Fitur / Modul:** Dashboard Pemantauan, Input Pengumuman, Preview Ekstraksi, & Checklist AI  
+**Total Target UI Screens:** 4 (1:1 Ratio Guaranteed)  
+**Dokumen Acuan:** `PRD-TugasIn.md` (Bagian 5, 6, 7 US-01 s/d US-04, 8, 9, 10) dan `AGENTS.md`  
 
 ---
 
-## 1. Traceability Matrix
+## 1. Traceability & UI Screen Mapping Matrix
 
-| FR ID | Feature Name | Target Screen ID | Route / View | Primary UI Component |
+| FR ID | Feature Name | Target Screen ID | Route / Context | Primary UI Component |
 | :--- | :--- | :--- | :--- | :--- |
 | **FR-01** | Dashboard Pemantauan Tugas & Prioritas Deadline | `screen-01-dashboard` | `/` atau `/dashboard` | `DashboardView` (Stats, FilterBar, TaskList, TaskCard) |
 | **FR-02** | Input Pengumuman Tugas & Orkestrasi Ekstraksi | `screen-01-input` | Modal / `/input` | `AnnouncementInputForm` & `AnnouncementInputAndPreview` |
 | **FR-03** | Preview Draft Tugas, Komparasi Teks Sumber & Koreksi | `screen-02-preview` | Modal / `/preview` | `TaskPreviewModal` |
+| **FR-04** | Detail Tugas & AI Task Checklist Management | `screen-02-task-detail-checklist` | Modal / `/tasks/:id` | `TaskChecklist`, `ChecklistItem`, `ChecklistProgress` |
 
 ---
 
-## 2. Detailed Functional Requirements & Screen Specs
+## 2. Detailed Functional Requirements
 
 ### FR-01: Dashboard Pemantauan Tugas & Prioritas Deadline
 - **Target Screen:** `screen-01-dashboard`
@@ -37,15 +38,6 @@
      - Tugas selesai (`status == 'done'`) tidak pernah menampilkan badge "Terlambat".
      - Checklist kosong menampilkan rasio `0/0 (0%)` tanpa error division-by-zero.
      - Progres checklist 100% tidak mengubah status tugas secara otomatis.
-  5. **Aksi & Integrasi Antar-Fitur:**
-     - Tombol aksi *"Tambah dari pengumuman"* (menghubungkan ke flow ekstraksi input).
-     - Tombol aksi *"Tambah manual"* (membuka modal/form manual).
-     - Interaksi klik kartu tugas untuk memicu navigasi/callback pembukaan detail tugas.
-  6. **4-State UI Resilience:**
-     - *Loading State:* Shimmering skeleton cards untuk stats dan task list.
-     - *Empty State (No Data):* Tampilan ramah ketika belum ada tugas yang tersimpan di sistem dengan CTA untuk menambah tugas.
-     - *Empty State (Filter):* Tampilan informatif ketika filter status tidak menghasilkan tugas, dengan tombol reset ke tab "Semua".
-     - *Success State:* Tampilan penuh kartu tugas dengan interaksi hover, keyboard focus, dan badge status semantik.
 
 ### FR-02: Input Pengumuman Tugas & Orkestrasi Ekstraksi
 - **Target Screen:** `screen-01-input`
@@ -54,12 +46,11 @@
 - **Workflow:**
   1. Pengguna membuka tampilan input pengumuman tugas.
   2. Sistem menampilkan keterangan: *“Teks pengumuman dikirim ke Gemini untuk diproses.”* (tanpa dialog popup tambahan).
-  3. Pengguna menempelkan teks tugas ke dalam textarea berlabel jelas.
-  4. Sistem menghitung jumlah karakter secara langsung (maksimal 5.000 karakter).
-  5. Pengguna secara opsional dapat mengisi *Tanggal Pesan Asal* (`sourceMessageDate`).
-  6. Pengguna dapat memeriksa zona waktu tampilan (`displayTimezone`, default peramban pengguna).
-  7. Pengguna mengklik *“Ambil tugas”* untuk memicu permintaan `POST /api/extract-task` dengan batas 30 detik.
-  8. Penanganan respons: `task` membuka preview modal, `no_task` menampilkan info tidak ada tugas, `multiple_tasks` menampilkan saran pemisahan, error menampilkan tombol retry dan tambah manual.
+  3. Pengguna menempelkan teks tugas ke dalam textarea berlabel jelas (maksimal 5.000 karakter).
+  4. Pengguna secara opsional dapat mengisi *Tanggal Pesan Asal* (`sourceMessageDate`).
+  5. Pengguna dapat memeriksa zona waktu tampilan (`displayTimezone`, default peramban pengguna).
+  6. Pengguna mengklik *“Ambil tugas”* untuk memicu permintaan `POST /api/extract-task` dengan batas 30 detik.
+  7. Penanganan respons: `task` membuka preview modal, `no_task` menampilkan feedback banner, `multiple_tasks` menampilkan saran pemisahan, error menampilkan tombol retry dan tambah manual.
 
 ### FR-03: Preview Draft Tugas, Komparasi Teks Sumber & Koreksi
 - **Target Screen:** `screen-02-preview`
@@ -71,6 +62,18 @@
   3. Pengguna dapat menyunting data secara fleksibel.
   4. Pengguna menekan *“Simpan tugas”* untuk meneruskan data ke state bersama/localStorage, atau *“Batal”* tanpa menyimpan.
   5. Jika penyimpanan lokal gagal, modal tetap terbuka dan draft tetap dipertahankan di memori.
+
+### FR-04: Detail Tugas & AI Task Checklist Management
+- **Target Screen:** `screen-02-task-detail-checklist`
+- **User Role:** Mahasiswa / Pengguna Akhir
+- **Objective:** Menghasilkan dan mengelola 3–7 langkah konkret pengerjaan tugas berbahasa Indonesia via Gemini API (`POST /api/generate-checklist`), dengan pemisahan tegas dari ketentuan dosen, interaktivitas centang & edit, telemetri progres, dan dialog konfirmasi pembuatan ulang.
+- **Workflow:**
+  1. Pengguna membuka detail tugas dari dashboard.
+  2. Empty state menyediakan tombol *"Buat langkah pengerjaan"*.
+  3. Loading state menampilkan skeleton shimmer dengan disable button untuk mencegah double-call.
+  4. Checklist menyajikan 3–7 langkah berlabel *"Saran AI"*, checkbox kustom, strikethrough, dan inline text editor.
+  5. Progress bar menghitung persentase penyelesaian tanpa pembagian dengan nol.
+  6. Tombol *"Buat ulang langkah"* memicu dialog konfirmasi agar progres aktif tidak terhapus tanpa sengaja.
 
 ---
 
@@ -85,3 +88,5 @@
    - Frasa "Jumat depan", tanggal tanpa tahun, atau dua tenggat yang bertentangan ditandai ambigu.
 4. **Isolasi Fitur AI Checklist:**
    - Ketentuan tugas pada preview murni berasal dari teks pengumuman (*requirements from source*), tidak mencampur aduk dengan checklist saran AI.
+5. **Keselarasan Kontrak Model Task (PRD Bagian 9):**
+   - `sourceText: string`, `sourceMessageDate: string | null`, `dueDate: string | null`, `dueTime: string | null`, `sourceTimezone: string | null`, `displayTimezone: string`, `requirements: string[]`, `status: TaskStatus`, `checklist: ChecklistItem[]`.

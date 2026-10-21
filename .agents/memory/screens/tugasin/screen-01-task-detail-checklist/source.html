@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+
+<html class="light" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TugasIn - Detail Tugas Wireframe Aplikasi Perpustakaan</title>
+<!-- Google Fonts: Plus Jakarta Sans & Material Symbols -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config verbatim matching design tokens -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "error": "#ba1a1a",
+            "canvas": "#F8FAFC",
+            "inverse-primary": "#b4c5ff",
+            "secondary-fixed": "#dae2fd",
+            "on-tertiary-fixed": "#360f00",
+            "tertiary-fixed-dim": "#ffb596",
+            "on-background": "#191b23",
+            "surface-container-low": "#f3f3fe",
+            "tertiary": "#943700",
+            "primary-fixed-dim": "#b4c5ff",
+            "tertiary-fixed": "#ffdbcd",
+            "inverse-surface": "#2e3039",
+            "tertiary-container": "#bc4800",
+            "surface-dim": "#d9d9e5",
+            "on-surface-variant": "#434655",
+            "on-primary-fixed": "#00174b",
+            "on-error-container": "#93000a",
+            "on-secondary-container": "#5c647a",
+            "hairline-strong": "#CBD5E1",
+            "surface-variant": "#e1e2ed",
+            "surface-bright": "#faf8ff",
+            "on-primary": "#ffffff",
+            "background": "#faf8ff",
+            "surface-container-high": "#e7e7f3",
+            "surface-subdued": "#F1F5F9",
+            "success-soft": "#ECFDF5",
+            "inverse-on-surface": "#f0f0fb",
+            "accent-hover": "#1D4ED8",
+            "secondary-container": "#dae2fd",
+            "hairline": "#E2E8F0",
+            "outline-variant": "#c3c6d7",
+            "on-secondary": "#ffffff",
+            "primary-fixed": "#dbe1ff",
+            "on-tertiary-fixed-variant": "#7d2d00",
+            "surface": "#FFFFFF",
+            "on-tertiary": "#ffffff",
+            "surface-container-highest": "#e1e2ed",
+            "surface-container-lowest": "#ffffff",
+            "on-error": "#ffffff",
+            "on-surface": "#191b23",
+            "primary-container": "#2563eb",
+            "success": "#059669",
+            "secondary-fixed-dim": "#bec6e0",
+            "surface-tint": "#0053db",
+            "surface-container": "#ededf9",
+            "on-primary-fixed-variant": "#003ea8",
+            "secondary": "#565e74",
+            "on-secondary-fixed": "#131b2e",
+            "outline": "#737686",
+            "on-secondary-fixed-variant": "#3f465c",
+            "primary": "#004ac6",
+            "on-tertiary-container": "#ffede6",
+            "error-container": "#ffdad6",
+            "ink-muted": "#64748B",
+            "danger": "#E11D48",
+            "on-primary-container": "#eeefff",
+            "danger-soft": "#FFF1F2",
+            "accent-soft": "#EFF6FF"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xl": "2rem",
+            "space-lg": "1.5rem",
+            "space-sm": "0.5rem",
+            "space-md": "1rem",
+            "margin": "1rem",
+            "gutter": "1rem",
+            "space-xs": "0.25rem"
+          },
+          "fontFamily": {
+            "body-step": ["Plus Jakarta Sans"],
+            "counter": ["Plus Jakarta Sans"],
+            "microcopy": ["Plus Jakarta Sans"],
+            "display-modal": ["Plus Jakarta Sans"],
+            "section-title": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "body-step": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+            "counter": ["13px", { "lineHeight": "1.2", "fontWeight": "600" }],
+            "microcopy": ["12px", { "lineHeight": "1.2", "fontWeight": "600" }],
+            "display-modal": ["20px", { "lineHeight": "1.3", "fontWeight": "700" }],
+            "section-title": ["15px", { "lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .material-symbols-outlined.fill {
+      font-variation-settings: 'FILL' 1;
+    }
+  </style>
+</head>
+<body class="bg-canvas text-on-surface antialiased font-body-step selection:bg-accent-soft selection:text-primary min-h-screen flex flex-col">
+<!-- TOP APP BAR -->
+<header class="bg-surface border-b border-hairline sticky top-0 z-40">
+<div class="flex items-center justify-between px-space-lg w-full h-16 max-w-7xl mx-auto">
+<!-- Brand & Tagline -->
+<div class="flex items-center gap-6">
+<a class="flex items-baseline gap-2.5 group" href="#">
+<span class="font-display-modal text-display-modal font-bold text-primary tracking-tight">TugasIn</span>
+<span class="text-ink-muted text-xs hidden sm:inline-block font-medium">Dari chat jadi checklist</span>
+</a>
+<!-- Breadcrumb Navigation -->
+<nav aria-label="Breadcrumb" class="hidden lg:flex items-center gap-2 text-xs text-ink-muted pl-4 border-l border-hairline">
+<a class="hover:text-on-surface transition-colors" href="#">Dashboard</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<a class="hover:text-on-surface transition-colors" href="#">Pemrograman Web</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-on-surface font-semibold truncate max-w-[200px]">Tugas Wireframe LMS</span>
+</nav>
+</div>
+<!-- Center Links (from Shared Component JSON navigation_links: Tasks active) -->
+<nav class="hidden md:flex items-center gap-6 text-sm">
+<a class="text-ink-muted font-body-step hover:text-on-surface transition-colors" href="#">Dashboard</a>
+<a class="text-ink-muted font-body-step hover:text-on-surface transition-colors" href="#">Courses</a>
+<a class="text-ink-muted font-body-step hover:text-on-surface transition-colors" href="#">Calendar</a>
+<a class="text-primary font-section-title text-section-title border-b-2 border-primary pb-1" href="#">Tasks</a>
+</nav>
+<!-- Right Controls: Quick Search, Action, Alerts & Student Profile -->
+<div class="flex items-center gap-3">
+<!-- Search Bar -->
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-ink-muted text-sm" data-icon="search">search</span>
+<input class="w-40 lg:w-52 pl-9 pr-3 py-1.5 bg-surface-subdued text-xs rounded-lg border border-hairline focus:outline-none focus:border-hairline-strong focus:bg-surface transition-all text-on-surface placeholder:text-ink-muted" placeholder="Cari tugas..." type="text"/>
+</div>
+<!-- Trailing Primary Action from JSON -->
+<button class="hidden xl:inline-flex items-center gap-1.5 bg-primary hover:bg-accent-hover text-on-primary font-section-title text-xs px-3 py-1.5 rounded-lg shadow-sm transition-all active:scale-95">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+<span>Create Task</span>
+</button>
+<!-- Notification Bell -->
+<button aria-label="Notifications" class="relative p-2 rounded-lg text-ink-muted hover:bg-surface-subdued hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="notifications">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full ring-2 ring-white"></span>
+</button>
+<!-- Help Icon Action -->
+<button aria-label="Bantuan" class="hidden sm:inline-flex p-2 rounded-lg text-ink-muted hover:bg-surface-subdued hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="help">help</span>
+</button>
+<div class="h-6 w-px bg-hairline mx-1 hidden sm:block"></div>
+<!-- Student Profile Avatar -->
+<div class="flex items-center gap-2.5 pl-1 cursor-pointer group">
+<img alt="User student profile avatar" class="w-9 h-9 rounded-full object-cover ring-2 ring-hairline group-hover:ring-hairline-strong transition" data-alt="A polished modern academic studio portrait of Rian Pratama, an Indonesian male student with clean short black hair wearing a navy blue crewneck sweater against a soft neutral studio backdrop. High-key natural lighting, crisp corporate minimalist photography style with subtle cool slate tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAR3eW8mWUCKB-a6mLh30OO9alRyw7eEB2pZBnBNydV2MyRU2X0PyMhm_pzRFf7mxdSBoTxobxb36tOPjUOYyzCZsD6T6kqqiPt8LdWY40Lm-BQL8VNfMQPO_EbmYzd0do-onnAP3BALwPuLw8iSOjW8XySiaWQkV6TbjjB1rKK6aqOevrzLNz7mS0spX-C_5Z8UEyxd9C03o2JNWj4cKXCS4n-dbN8MmS1s3oiIT2NJZumhVVpyaRbn82XJxLuizJLZqqLORAkzJk"/>
+<div class="text-left hidden md:block">
+<p class="text-xs font-semibold text-on-surface group-hover:text-primary transition-colors leading-tight">Rian Pratama</p>
+<p class="text-[11px] text-ink-muted leading-tight font-counter">13522041</p>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- MAIN CANVAS -->
+<main class="flex-1 max-w-6xl w-full mx-auto py-8 px-4 sm:px-6">
+<!-- Breadcrumb / Back Link -->
+<div class="mb-5 flex items-center justify-between">
+<a class="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-muted hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined text-sm transition-transform group-hover:-translate-x-0.5" data-icon="arrow_back">arrow_back</span>
+<span>Kembali ke Daftar Tugas</span>
+</a>
+<div class="flex items-center gap-2 text-xs text-ink-muted">
+<span class="inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-success" data-icon="cloud_done">cloud_done</span>
+<span>Tersinkronisasi otomatis</span>
+</span>
+</div>
+</div>
+<!-- TASK HEADER CONTAINER -->
+<section class="bg-surface rounded-2xl p-6 sm:p-7 border border-hairline shadow-sm mb-6 transition-all hover:border-hairline-strong">
+<!-- Title & Action -->
+<div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+<div>
+<h1 class="font-display-modal text-display-modal text-xl sm:text-2xl font-bold text-on-surface tracking-tight">
+            Tugas Wireframe Aplikasi Perpustakaan
+          </h1>
+<p class="text-ink-muted text-xs mt-1">Dibuat dari forward chat WhatsApp kelas oleh Komti pada 14 Okt 2026</p>
+</div>
+<div class="flex items-center gap-2 self-start">
+<button class="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-muted hover:text-on-surface border border-hairline bg-surface hover:bg-surface-subdued px-3 py-1.5 rounded-lg transition shadow-sm">
+<span class="material-symbols-outlined text-sm" data-icon="share">share</span>
+<span>Bagikan</span>
+</button>
+<button class="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-muted hover:text-on-surface border border-hairline bg-surface hover:bg-surface-subdued px-2.5 py-1.5 rounded-lg transition shadow-sm">
+<span class="material-symbols-outlined text-sm" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Badges Row -->
+<div class="flex flex-wrap items-center gap-2 mt-4 pt-1">
+<!-- Course Badge -->
+<span class="inline-flex items-center gap-1.5 bg-accent-soft text-primary border border-primary-fixed font-medium px-3 py-1 rounded-full text-xs">
+<span class="material-symbols-outlined text-xs" data-icon="school">school</span>
+<span>Pemrograman Web (IF-301)</span>
+</span>
+<!-- Status Badge -->
+<span class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-200 font-medium px-3 py-1 rounded-full text-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+<span>Sedang Dikerjakan</span>
+</span>
+<!-- Deadline Badge -->
+<span class="inline-flex items-center gap-1.5 bg-surface-subdued text-slate-700 border border-hairline font-medium px-3 py-1 rounded-full text-xs">
+<span class="material-symbols-outlined text-xs text-ink-muted" data-icon="event">event</span>
+<span>21 Okt 2026, 23:59 WIB</span>
+</span>
+</div>
+<!-- Section: Ketentuan dari pengumuman dosen -->
+<div class="border-l-4 border-primary-container bg-surface-subdued/70 p-4 rounded-r-xl mt-5">
+<div class="flex items-center gap-2 text-xs font-bold text-on-surface mb-2">
+<span class="material-symbols-outlined text-primary text-[18px]" data-icon="campaign">campaign</span>
+<span>Ketentuan Resmi Pengumuman</span>
+</div>
+<ul class="text-xs text-slate-700 space-y-1.5 pl-6 list-disc marker:text-primary">
+<li class="leading-relaxed">Maksimal 3 anggota per kelompok.</li>
+<li class="leading-relaxed">Format pengumpulan PDF melalui portal LMS.</li>
+<li class="leading-relaxed">Sertakan user flow lengkap dan wireframe low-fidelity semua alur utama.</li>
+</ul>
+</div>
+</section>
+<!-- PRIMARY FOCAL CARD: Checklist Langkah Pengerjaan AI -->
+<section class="bg-surface rounded-2xl p-6 sm:p-8 border border-hairline shadow-sm relative transition-all">
+<!-- Card Header -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4">
+<div class="flex items-center gap-2.5">
+<h2 class="text-xl font-bold text-on-surface font-section-title">Langkah Pengerjaan</h2>
+<span class="inline-flex items-center gap-1 bg-accent-soft text-primary border border-primary-fixed px-2.5 py-1 rounded-full text-xs font-semibold">
+<span class="material-symbols-outlined text-xs fill text-primary" data-icon="auto_awesome">auto_awesome</span>
+<span>Saran AI</span>
+</span>
+</div>
+<div class="flex items-center gap-3">
+<!-- Telemetry -->
+<span class="text-xs sm:text-sm font-semibold text-ink-muted font-counter">
+<strong class="text-on-surface">2</strong> dari 5 selesai · 40%
+          </span>
+<!-- Regenerate Trigger Button -->
+<button class="border border-hairline hover:bg-surface-subdued text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm transition active:scale-95" id="openModalBtn" title="Buat ulang langkah pengerjaan dengan prompt AI baru">
+<span class="material-symbols-outlined text-sm text-ink-muted" data-icon="restart_alt">restart_alt</span>
+<span>Buat ulang</span>
+</button>
+</div>
+</div>
+<!-- Telemetry Progress Bar -->
+<div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden mb-6">
+<div aria-valuemax="100" aria-valuemin="0" aria-valuenow="40" class="bg-primary-container h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_8px_rgba(37,99,235,0.4)]" role="progressbar" style="width: 40%;"></div>
+</div>
+<!-- Checklist Step Items Stack -->
+<div class="space-y-3" id="checklistContainer">
+<!-- STEP 1 [Checked] -->
+<div class="flex items-start justify-between p-3.5 rounded-xl border border-hairline bg-surface hover:bg-slate-50 transition group">
+<div class="flex items-start gap-3 flex-1 min-w-0 pr-3">
+<button class="mt-0.5 w-5 h-5 rounded-md bg-success flex items-center justify-center text-white flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-success/40 transition">
+<span class="material-symbols-outlined text-sm font-bold" data-icon="check">check</span>
+</button>
+<div class="min-w-0">
+<p class="text-sm text-slate-400 line-through leading-relaxed">
+                Bentuk kelompok maksimal 3 mahasiswa dan tentukan ketua
+              </p>
+<div class="flex items-center gap-2 mt-1">
+<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-success bg-success-soft px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[12px] fill" data-icon="check_circle">check_circle</span>
+<span>Selesai</span>
+</span>
+<span class="text-[11px] text-ink-muted">Kemarin, 16:40</span>
+</div>
+</div>
+</div>
+<button class="opacity-0 group-hover:opacity-100 text-ink-muted hover:text-on-surface p-1 rounded transition" title="Edit langkah">
+<span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+</button>
+</div>
+<!-- STEP 2 [Checked] -->
+<div class="flex items-start justify-between p-3.5 rounded-xl border border-hairline bg-surface hover:bg-slate-50 transition group">
+<div class="flex items-start gap-3 flex-1 min-w-0 pr-3">
+<button class="mt-0.5 w-5 h-5 rounded-md bg-success flex items-center justify-center text-white flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-success/40 transition">
+<span class="material-symbols-outlined text-sm font-bold" data-icon="check">check</span>
+</button>
+<div class="min-w-0">
+<p class="text-sm text-slate-400 line-through leading-relaxed">
+                Buat dokumen user flow peminjaman dan pengembalian buku
+              </p>
+<div class="flex items-center gap-2 mt-1">
+<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-success bg-success-soft px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[12px] fill" data-icon="check_circle">check_circle</span>
+<span>Selesai</span>
+</span>
+<span class="text-[11px] text-ink-muted">Hari ini, 10:15</span>
+</div>
+</div>
+</div>
+<button class="opacity-0 group-hover:opacity-100 text-ink-muted hover:text-on-surface p-1 rounded transition" title="Edit langkah">
+<span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+</button>
+</div>
+<!-- STEP 3 [Inline Edit Mode] -->
+<div class="bg-blue-50/40 border border-primary-container rounded-xl p-3.5 shadow-sm">
+<div class="flex items-start gap-3">
+<div class="mt-1 w-5 h-5 rounded-md border-2 border-hairline-strong bg-white flex items-center justify-center flex-shrink-0"></div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-1.5">
+<span class="text-[11px] font-semibold text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" data-icon="edit_note">edit_note</span>
+<span>Mode Penyuntingan Langkah</span>
+</span>
+<span class="text-[11px] text-ink-muted font-mono">Langkah 3</span>
+</div>
+<textarea class="w-full text-sm text-on-surface bg-white border border-primary-container rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition resize-none leading-relaxed shadow-inner" rows="2">Rancang wireframe low-fidelity halaman katalog dan detail buku</textarea>
+<div class="flex items-center justify-between mt-2.5 pt-1">
+<span class="text-[11px] text-ink-muted">Tekan <kbd class="px-1 py-0.5 bg-white border border-hairline rounded font-mono text-[10px]">Enter</kbd> untuk simpan</span>
+<div class="flex items-center gap-2">
+<button class="text-ink-muted hover:text-on-surface text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                    Batal
+                  </button>
+<button class="bg-primary hover:bg-accent-hover text-on-primary text-xs font-semibold px-3.5 py-1.5 rounded-lg shadow-sm transition active:scale-95 flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="check">check</span>
+<span>Simpan</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- STEP 4 [Unchecked] -->
+<div class="flex items-start justify-between p-3.5 rounded-xl border border-hairline bg-surface hover:bg-slate-50 transition group cursor-pointer">
+<div class="flex items-start gap-3 flex-1 min-w-0 pr-3">
+<button class="mt-0.5 w-5 h-5 rounded-md border-2 border-hairline-strong bg-white hover:border-primary flex items-center justify-center flex-shrink-0 transition"></button>
+<div>
+<p class="text-sm text-on-surface leading-relaxed">
+                Kompilasi wireframe ke dalam format PDF sesuai ketentuan
+              </p>
+<div class="flex items-center gap-3 mt-1 text-[11px] text-ink-muted">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" data-icon="picture_as_pdf">picture_as_pdf</span>
+<span>Format LMS</span>
+</span>
+<span>•</span>
+<span>Estimasi 25 menit</span>
+</div>
+</div>
+</div>
+<button class="opacity-0 group-hover:opacity-100 text-ink-muted hover:text-on-surface p-1 rounded transition" title="Edit langkah">
+<span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+</button>
+</div>
+<!-- STEP 5 [Unchecked] -->
+<div class="flex items-start justify-between p-3.5 rounded-xl border border-hairline bg-surface hover:bg-slate-50 transition group cursor-pointer">
+<div class="flex items-start gap-3 flex-1 min-w-0 pr-3">
+<button class="mt-0.5 w-5 h-5 rounded-md border-2 border-hairline-strong bg-white hover:border-primary flex items-center justify-center flex-shrink-0 transition"></button>
+<div>
+<p class="text-sm text-on-surface leading-relaxed">
+                Submit PDF ke portal LMS sebelum batas waktu 23.59 WIB
+              </p>
+<div class="flex items-center gap-3 mt-1 text-[11px] text-ink-muted">
+<span class="flex items-center gap-1 text-danger font-medium">
+<span class="material-symbols-outlined text-[13px]" data-icon="timer">timer</span>
+<span>Batas 21 Okt</span>
+</span>
+</div>
+</div>
+</div>
+<button class="opacity-0 group-hover:opacity-100 text-ink-muted hover:text-on-surface p-1 rounded transition" title="Edit langkah">
+<span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+</button>
+</div>
+</div>
+<!-- Footnote Caption -->
+<div class="mt-6 pt-4 border-t border-hairline flex items-center gap-2 text-xs text-ink-muted">
+<span class="material-symbols-outlined text-sm text-primary flex-shrink-0" data-icon="info">info</span>
+<span>Langkah ini adalah saran AI untuk mempermudah pengerjaan dan tidak mengubah ketentuan resmi pengumuman.</span>
+</div>
+</section>
+<!-- Additional Academic Resource Bento Card for Productivity Context -->
+<section class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="bg-surface rounded-xl p-4 border border-hairline shadow-sm flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-accent-soft text-primary flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-lg" data-icon="attachment">attachment</span>
+</div>
+<div class="min-w-0 flex-1">
+<h4 class="text-xs font-bold text-on-surface truncate">Lampiran Bahan Ajar</h4>
+<p class="text-[11px] text-ink-muted truncate">Slide-Kuliah-07-Wireframe.pdf</p>
+</div>
+<span class="material-symbols-outlined text-ink-muted text-sm" data-icon="download">download</span>
+</div>
+<div class="bg-surface rounded-xl p-4 border border-hairline shadow-sm flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-subdued text-on-surface flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-lg" data-icon="group">group</span>
+</div>
+<div class="min-w-0 flex-1">
+<h4 class="text-xs font-bold text-on-surface truncate">Anggota Kelompok (3/3)</h4>
+<p class="text-[11px] text-ink-muted truncate">Rian (Ketua), Nabila, Farhan</p>
+</div>
+<span class="material-symbols-outlined text-ink-muted text-sm" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="bg-surface rounded-xl p-4 border border-hairline shadow-sm flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-success-soft text-success flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-lg" data-icon="forum">forum</span>
+</div>
+<div class="min-w-0 flex-1">
+<h4 class="text-xs font-bold text-on-surface truncate">Sumber Percakapan Asli</h4>
+<p class="text-[11px] text-ink-muted truncate">Grup WA: IF-301 Pemweb 2026</p>
+</div>
+<span class="material-symbols-outlined text-ink-muted text-sm" data-icon="open_in_new">open_in_new</span>
+</div>
+</section>
+</main>
+<!-- MODAL DIALOG KONFIRMASI PEMBUATAN ULANG (Active Preview as requested) -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm bg-slate-900/40 transition-opacity duration-200" id="regenerateModal">
+<div class="max-w-md w-full bg-white rounded-2xl p-6 shadow-2xl border border-hairline transform transition-all">
+<!-- Modal Top Row: Icon & Close Action -->
+<div class="flex items-start justify-between mb-4">
+<div class="w-11 h-11 rounded-xl bg-accent-soft text-primary flex items-center justify-center border border-primary-fixed">
+<span class="material-symbols-outlined text-2xl fill" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<button class="text-ink-muted hover:text-on-surface p-1 rounded-lg hover:bg-surface-subdued transition" id="closeModalCross">
+<span class="material-symbols-outlined text-lg" data-icon="close">close</span>
+</button>
+</div>
+<!-- Modal Title & Explanation -->
+<h3 class="font-display-modal text-lg sm:text-xl font-bold text-on-surface tracking-tight mb-2">
+        Buat ulang langkah pengerjaan?
+      </h3>
+<p class="text-xs sm:text-sm text-ink-muted leading-relaxed mb-6">
+        Checklist yang ada saat ini dan progres centangnya (<strong class="text-on-surface">2 dari 5 selesai</strong>) akan digantikan dengan saran baru dari Gemini. Tindakan ini tidak dapat dibatalkan.
+      </p>
+<!-- Modal Action Buttons -->
+<div class="flex items-center justify-end gap-3 pt-2">
+<button class="bg-surface-subdued hover:bg-slate-200 text-slate-700 font-semibold px-4 py-2.5 rounded-xl text-sm transition" id="closeModalBtn" type="button">
+          Batal
+        </button>
+<button class="bg-primary hover:bg-accent-hover text-on-primary font-semibold px-4 py-2.5 rounded-xl text-sm flex items-center gap-2 shadow-sm transition active:scale-95" id="confirmRegenerateBtn" type="button">
+<span class="material-symbols-outlined text-sm" data-icon="refresh">refresh</span>
+<span>Ya, Buat Ulang</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Interactive JavaScript for micro-interactions -->
+<script>
+    const modal = document.getElementById('regenerateModal');
+    const openModalBtn = document.getElementById('openModalBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const closeModalCross = document.getElementById('closeModalCross');
+    const confirmRegenerateBtn = document.getElementById('confirmRegenerateBtn');
+
+    function hideModal() {
+      modal.classList.add('hidden');
+    }
+
+    function showModal() {
+      modal.classList.remove('hidden');
+    }
+
+    // Modal triggers
+    openModalBtn.addEventListener('click', showModal);
+    closeModalBtn.addEventListener('click', hideModal);
+    closeModalCross.addEventListener('click', hideModal);
+
+    // Dismiss modal on backdrop click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        hideModal();
+      }
+    });
+
+    // Confirm button simulation
+    confirmRegenerateBtn.addEventListener('click', () => {
+      confirmRegenerateBtn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">progress_activity</span><span>Membuat Saran Baru...</span>';
+      setTimeout(() => {
+        hideModal();
+        confirmRegenerateBtn.innerHTML = '<span class="material-symbols-outlined text-sm">refresh</span><span>Ya, Buat Ulang</span>';
+      }, 900);
+    });
+
+    // Keyboard escape closes modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+        hideModal();
+      }
+    });
+  </script>
+</body></html>

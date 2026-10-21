@@ -1,12 +1,14 @@
 {
   "name": "tugasin",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc && vite build",
     "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview",
     "test": "vitest run"
   },
   "dependencies": {
@@ -15,6 +17,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@types/node": "^22.7.5",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",

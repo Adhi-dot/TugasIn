@@ -1,7 +1,7 @@
 {
   "projectSlug": "tugasin",
-  "totalFRs": 1,
-  "totalScreens": 1,
+  "totalFRs": 3,
+  "totalScreens": 3,
   "screens": [
     {
       "frId": "FR-01",
@@ -11,6 +11,24 @@
       "purpose": "Memantau tugas aktif dan selesai, filter status, pengurutan deadline otomatis, dan ringkasan progres tugas mahasiswa.",
       "primaryComponent": "DashboardView",
       "stitchPromptBrief": "A modern, responsive Light-mode student task management dashboard for TugasIn ('Dari chat jadi checklist'). Clean white canvas (#FFFFFF) and slate-50 background, subtle border (#E2E8F0), crisp typography using Plus Jakarta Sans. Includes header with brand and action buttons '+ Tambah dari pengumuman' and '+ Tambah manual', a 2-card KPI summary showing 'Tugas Aktif' and 'Tugas Selesai', interactive status filter pills ('Semua', 'Belum mulai', 'Dikerjakan', 'Selesai'), and a multi-column task card grid. Each task card displays course badge, status badge in Indonesian, task title, clear deadline with overdue highlight or 'jam tidak disebutkan' label, and checklist completion progress bar. Accessible, semantic, mobile-first down to 360px."
+    },
+    {
+      "frId": "FR-02",
+      "screenId": "screen-01-input",
+      "title": "Input Pengumuman Tugas",
+      "route": "/input",
+      "purpose": "Formulir input penempelan teks pengumuman tugas mahasiswa dengan karakter counter, pengaturan tanggal acuan, zona waktu, dan orkestrasi pemanggilan ekstraksi Gemini",
+      "primaryComponent": "AnnouncementInputForm",
+      "stitchPromptBrief": "A modern, clean light-mode web interface for university students to paste assignment announcements. Features a prominent clean text area with subtle slate border and clear Indonesian labeling, character count tracker (max 5,000), optional context inputs for message date and timezone selector, and a high-contrast emerald CTA button titled 'Ambil tugas'. Displays a subtle privacy reassurance caption below the input and includes an outline secondary button for manual entry. Includes thoughtful states for processing shimmer, error alert notification, and contextual feedback."
+    },
+    {
+      "frId": "FR-03",
+      "screenId": "screen-02-preview",
+      "title": "Preview dan Koreksi Draft Tugas",
+      "route": "/preview",
+      "purpose": "Ruang kerja komparasi 2-kolom antara teks pengumuman asli dan draft kartu tugas terstruktur hasil ekstraksi dengan koreksi field, indikator ambigu, validasi deadline, serta tombol simpan tugas",
+      "primaryComponent": "TaskPreviewModal",
+      "stitchPromptBrief": "A comprehensive two-column preview and validation workspace for reviewing extracted academic assignments. The left column displays the raw original Indonesian announcement text inside a clean slate container with subtle typography. The right column presents an editable structured form for task title, course name, date and time picker with 'Needs Completion' indicator badges for missing fields, timezone indicator, and assignment requirements chips. Bottom action bar has a ghost 'Batal' button and a bold emerald 'Simpan tugas' CTA button. Pristine light mode theme, WCAG compliant contrast, modern typography."
     }
   ]
 }

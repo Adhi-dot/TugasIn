@@ -1,0 +1,5 @@
+interface:
+  display_name: "Stitch Review"
+  short_description: "Audit Stitch screens against design systems and generate persistent review reports"
+policy:
+  allow_implicit_invocation: false

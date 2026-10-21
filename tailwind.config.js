@@ -11,20 +11,34 @@ export default {
         surface: {
           DEFAULT: '#FFFFFF',
           subdued: '#F1F5F9',
+          subtle: '#F8FAFC',
+          hover: '#F1F5F9',
         },
         hairline: {
           DEFAULT: '#E2E8F0',
           strong: '#CBD5E1',
         },
-        ink: {
-          DEFAULT: '#0F172A',
-          muted: '#64748B',
+        border: {
+          DEFAULT: '#E2E8F0',
+          strong: '#CBD5E1',
+        },
+        brand: {
+          primary: '#4F46E5',
+          hover: '#4338CA',
+          light: '#EEF2FF',
         },
         accent: {
           DEFAULT: '#2563EB',
           hover: '#1D4ED8',
           soft: '#EFF6FF',
           ink: '#1D4ED8',
+        },
+        ink: {
+          DEFAULT: '#0F172A',
+          primary: '#0F172A',
+          secondary: '#475569',
+          muted: '#64748B',
+          faint: '#94A3B8',
         },
         success: {
           DEFAULT: '#059669',
@@ -34,9 +48,32 @@ export default {
           DEFAULT: '#E11D48',
           soft: '#FFF1F2',
         },
+        status: {
+          'not-started-bg': '#F1F5F9',
+          'not-started-text': '#475569',
+          'in-progress-bg': '#FEF3C7',
+          'in-progress-text': '#92400E',
+          'done-bg': '#ECFDF5',
+          'done-text': '#065F46',
+        },
+        urgent: {
+          'overdue-bg': '#FFF1F2',
+          'overdue-border': '#FECDD3',
+          'overdue-text': '#BE123C',
+        },
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+      },
+      borderRadius: {
+        'sm': '6px',
+        'md': '10px',
+        'lg': '14px',
+        'xl': '16px',
+      },
+      boxShadow: {
+        'card': '0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05)',
+        'card-hover': '0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05)',
       },
     },
   },

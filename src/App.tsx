@@ -1,272 +1,346 @@
-import React, { useState } from 'react';
-import { Calendar, ArrowLeft, FileText, Users, MessageSquare, ExternalLink, Download } from 'lucide-react';
-import { TaskChecklist } from './components/checklist/TaskChecklist';
+import React, { useState, useEffect } from 'react';
 import { Task } from './types/task';
 import { ChecklistItemData } from './types/checklist';
-
-const INITIAL_TASK: Task = {
-  id: 'task-wireframe-01',
-  title: 'Tugas Wireframe Aplikasi Perpustakaan',
-  course: 'Pemrograman Web (IF-301)',
-  description: 'Membuat rancangan wireframe low-fidelity untuk sistem peminjaman dan katalog buku digital.',
-  sourceText: 'Untuk mata kuliah UI/UX, buat wireframe aplikasi perpustakaan. Maksimal 3 anggota per kelompok. Kumpulkan PDF pada 21 Oktober 2026 pukul 23.59 WIB melalui LMS.',
-  sourceMessageDate: '2026-10-14',
-  dueDate: '2026-10-21',
-  dueTime: '23:59',
-  displayTimezone: 'WIB',
-  status: 'in_progress',
-  requirements: [
-    'Maksimal 3 anggota per kelompok',
-    'Format pengumpulan PDF melalui portal LMS',
-    'Sertakan user flow lengkap dan wireframe low-fidelity semua alur utama',
-  ],
-  checklist: [
-    {
-      id: 'step-1',
-      text: 'Bentuk kelompok maksimal 3 mahasiswa dan tentukan ketua',
-      completed: true,
-      origin: 'ai',
-    },
-    {
-      id: 'step-2',
-      text: 'Buat dokumen user flow peminjaman dan pengembalian buku',
-      completed: true,
-      origin: 'ai',
-    },
-    {
-      id: 'step-3',
-      text: 'Rancang wireframe low-fidelity halaman katalog dan detail buku',
-      completed: false,
-      origin: 'ai',
-    },
-    {
-      id: 'step-4',
-      text: 'Kompilasi wireframe ke dalam format PDF sesuai ketentuan',
-      completed: false,
-      origin: 'ai',
-    },
-    {
-      id: 'step-5',
-      text: 'Submit PDF ke portal LMS sebelum batas waktu 23.59 WIB',
-      completed: false,
-      origin: 'ai',
-    },
-  ],
-  createdAt: '2026-10-14T08:00:00Z',
-  updatedAt: '2026-10-21T10:00:00Z',
-};
-
-const STORAGE_KEY = 'tugasin_active_task_detail';
+import { MOCK_TASKS } from './data/mockTasks';
+import { DashboardHeader } from './components/dashboard/DashboardHeader';
+import { DashboardView } from './components/dashboard/DashboardView';
+import { TaskChecklist } from './components/checklist/TaskChecklist';
+import { X, Sparkles, Plus, BookOpen, Calendar, FileText } from 'lucide-react';
 
 export const App: React.FC = () => {
-  const [task, setTask] = useState<Task>(() => {
+  // Flag indicating if current state is temporary demo fixture (kept strictly in memory)
+  const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
+
+  // Initial user tasks strictly read from localStorage; new users always start with empty [] (Empty State)
+  const [tasks, setTasks] = useState<Task[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem('tugasin_tasks');
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
       }
-    } catch {
-      // Fallback
+    } catch (e) {
+      console.warn('Gagal membaca localStorage:', e);
     }
-    return INITIAL_TASK;
+    // New users start with EMPTY array to display authentic empty state
+    return [];
   });
 
-  // Sinkronisasi penyimpanan tugas bersama ke localStorage
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [activeModal, setActiveModal] = useState<'announcement' | 'manual' | null>(null);
+
+  // Sync actual user tasks to localStorage only when NOT in temporary demo mode
+  useEffect(() => {
+    if (isDemoMode) {
+      // Demo data must never be saved as user tasks
+      return;
+    }
+    try {
+      localStorage.setItem('tugasin_tasks', JSON.stringify(tasks));
+    } catch (e) {
+      console.warn('Gagal menyimpan ke localStorage:', e);
+    }
+  }, [tasks, isDemoMode]);
+
+  // Update checklist for active task & reflect in master task list
   const handleUpdateChecklist = (newChecklist: ChecklistItemData[]) => {
-    setTask((prev) => {
-      const updated: Task = {
-        ...prev,
-        checklist: newChecklist,
-        updatedAt: new Date().toISOString(),
-      };
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      } catch (err) {
-        console.error('Gagal menyimpan tugas ke localStorage:', err);
-      }
-      return updated;
-    });
+    if (!selectedTask) return;
+
+    setTasks((prevTasks) =>
+      prevTasks.map((t) => {
+        if (t.id === selectedTask.id) {
+          const updated: Task = {
+            ...t,
+            checklist: newChecklist,
+            updatedAt: new Date().toISOString(),
+          };
+          setSelectedTask(updated);
+          return updated;
+        }
+        return t;
+      })
+    );
   };
 
-  const resetToEmptyState = () => {
-    const emptyTask: Task = {
-      ...task,
-      checklist: [],
-      updatedAt: new Date().toISOString(),
-    };
-    setTask(emptyTask);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(emptyTask));
+  // Handlers for action buttons
+  const handleAddFromAnnouncement = () => {
+    setActiveModal('announcement');
   };
 
-  const resetToDefaultSample = () => {
-    setTask(INITIAL_TASK);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_TASK));
+  const handleAddManual = () => {
+    setActiveModal('manual');
+  };
+
+  const handleSelectTask = (task: Task) => {
+    setSelectedTask(task);
+  };
+
+  // Quick Demo Controls for development (Explicit action only)
+  const handleLoadMockData = () => {
+    setIsDemoMode(true);
+    setTasks(MOCK_TASKS);
+    setErrorMessage(null);
+    setIsLoading(false);
+  };
+
+  const handleClearAllTasks = () => {
+    setIsDemoMode(false);
+    setTasks([]);
+    try {
+      localStorage.removeItem('tugasin_tasks');
+    } catch (e) {
+      console.warn('Gagal menghapus localStorage:', e);
+    }
+    setErrorMessage(null);
+    setIsLoading(false);
+  };
+
+  const handleSimulateLoading = () => {
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 800);
+  };
+
+  const handleSimulateError = () => {
+    setErrorMessage('Koneksi terputus saat mengambil data penyimpanan lokal. Silakan coba lagi.');
   };
 
   return (
-    <div className="min-h-screen bg-canvas text-ink flex flex-col">
-      {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md border-b border-hairline">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-accent text-white flex items-center justify-center font-extrabold text-lg shadow-sm">
-              T
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-base tracking-tight text-ink">TugasIn</span>
-                <span className="hidden sm:inline text-xs text-ink-muted">· Dari chat jadi checklist</span>
-              </div>
-              <div className="text-xs text-ink-muted">
-                Dashboard / Pemrograman Web / Tugas Wireframe
-              </div>
-            </div>
+    <div className="min-h-screen bg-canvas flex flex-col font-sans">
+      {/* Top Application Header */}
+      <DashboardHeader
+        onAddFromAnnouncement={handleAddFromAnnouncement}
+        onAddManual={handleAddManual}
+      />
+
+      {/* Main Dashboard View */}
+      <div className="flex-1">
+        <DashboardView
+          tasks={tasks}
+          isLoading={isLoading}
+          error={errorMessage}
+          onAddTaskFromAnnouncement={handleAddFromAnnouncement}
+          onAddManualTask={handleAddManual}
+          onSelectTask={handleSelectTask}
+          onRetry={() => {
+            setErrorMessage(null);
+            setIsLoading(false);
+          }}
+        />
+      </div>
+
+      {/* Developer Testing Toolbar: STRICTLY RENDERED IN DEV MODE ONLY */}
+      {import.meta.env.DEV && (
+        <aside
+          aria-label="Toolbar Pengujian Pengembang"
+          className="bg-white border-t border-border px-4 py-2 text-xs text-ink-muted flex flex-wrap items-center justify-between gap-3 sticky bottom-0 z-20 shadow-sm"
+        >
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-ink-primary">Status Uji Dashboard:</span>
+            <span>
+              {isDemoMode ? 'Mode Data Demo (Dalam Memori)' : `${tasks.length} Tugas Tersimpan`}
+            </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2.5 pl-3 border-l border-slate-200">
-              <img
-                src="/assets/images/student-avatar.jpg"
-                alt="Foto Profil Mahasiswa"
-                className="w-8 h-8 rounded-full object-cover ring-2 ring-slate-100"
-              />
-              <div className="hidden sm:block text-left">
-                <p className="text-xs font-bold text-ink leading-tight">Rian Pratama</p>
-                <p className="text-[10px] text-ink-muted font-medium">NIM 13522041</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Container */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
-        {/* Navigasi Kembali */}
-        <div className="flex items-center justify-between">
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-ink-muted hover:text-ink transition"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Kembali ke Daftar Tugas</span>
-          </button>
-
-          {/* Quick Demo Controls */}
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={resetToEmptyState}
-              className="px-2.5 py-1 text-[11px] font-semibold text-ink-muted hover:text-ink bg-slate-100 hover:bg-slate-200 rounded-lg transition"
-              title="Kosongkan checklist untuk melihat Empty State"
+              onClick={handleLoadMockData}
+              className="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-brand-primary rounded font-medium transition-colors"
             >
-              Simulasi Empty State
+              Muat Data Demo ({MOCK_TASKS.length})
             </button>
             <button
               type="button"
-              onClick={resetToDefaultSample}
-              className="px-2.5 py-1 text-[11px] font-semibold text-accent hover:text-accent-hover bg-blue-50 hover:bg-blue-100 rounded-lg transition"
-              title="Reset ke contoh awal"
+              onClick={handleClearAllTasks}
+              className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-ink-secondary rounded font-medium transition-colors"
             >
-              Reset Data Contoh
+              Uji State Kosong (0)
+            </button>
+            <button
+              type="button"
+              onClick={handleSimulateLoading}
+              className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-ink-secondary rounded font-medium transition-colors"
+            >
+              Uji Loading Skeleton
+            </button>
+            <button
+              type="button"
+              onClick={handleSimulateError}
+              className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded font-medium transition-colors"
+            >
+              Uji Error State
+            </button>
+          </div>
+        </aside>
+      )}
+
+      {/* Modal Dialog: Detail Tugas & Checklist AI Integrasi Penuh */}
+      {selectedTask && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-task-title"
+          className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+        >
+          <div className="bg-white border border-border rounded-2xl max-w-3xl w-full max-h-[92vh] overflow-y-auto p-5 sm:p-7 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150 space-y-6">
+            <button
+              type="button"
+              onClick={() => setSelectedTask(null)}
+              className="absolute top-4 right-4 p-2 rounded-lg text-ink-muted hover:text-ink-primary hover:bg-slate-100 transition-colors"
+              aria-label="Tutup detail tugas"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Task Context Header */}
+            <div className="space-y-3 pr-8">
+              <div className="flex flex-wrap items-center gap-2">
+                {selectedTask.course && (
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md bg-indigo-50 text-brand-primary border border-indigo-100">
+                    <BookOpen className="w-3.5 h-3.5" />
+                    {selectedTask.course}
+                  </span>
+                )}
+                <span
+                  className={`text-xs font-semibold px-2.5 py-1 rounded-md ${
+                    selectedTask.status === 'not_started'
+                      ? 'bg-slate-100 text-slate-700'
+                      : selectedTask.status === 'in_progress'
+                      ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                      : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  }`}
+                >
+                  {selectedTask.status === 'not_started'
+                    ? 'Belum Mulai'
+                    : selectedTask.status === 'in_progress'
+                    ? 'Sedang Dikerjakan'
+                    : 'Selesai'}
+                </span>
+                {selectedTask.dueDate && (
+                  <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-md bg-slate-100 text-ink-secondary">
+                    <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                    <span>
+                      {selectedTask.dueDate}
+                      {selectedTask.dueTime ? ` · ${selectedTask.dueTime}` : ''}
+                      {selectedTask.displayTimezone ? ` ${selectedTask.displayTimezone}` : ''}
+                    </span>
+                  </span>
+                )}
+              </div>
+
+              <h2 id="modal-task-title" className="text-xl sm:text-2xl font-bold text-ink-primary leading-tight">
+                {selectedTask.title}
+              </h2>
+
+              {selectedTask.description && (
+                <p className="text-sm text-ink-secondary leading-relaxed">
+                  {selectedTask.description}
+                </p>
+              )}
+            </div>
+
+            {/* Official Requirements from Lecturer */}
+            {selectedTask.requirements && selectedTask.requirements.length > 0 && (
+              <div className="border-l-4 border-brand-primary bg-slate-50 p-4 rounded-r-xl space-y-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-ink-primary">
+                  <FileText className="w-4 h-4 text-brand-primary" />
+                  <span>Ketentuan Resmi dari Pengumuman Dosen</span>
+                </div>
+                <ul className="text-xs sm:text-sm text-ink-secondary space-y-1 list-disc list-inside">
+                  {selectedTask.requirements.map((req, i) => (
+                    <li key={i}>{req}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Primary TaskChecklist Component with AI Assistant */}
+            <div className="pt-2">
+              <TaskChecklist
+                taskId={selectedTask.id}
+                taskTitle={selectedTask.title}
+                taskDescription={selectedTask.description}
+                taskRequirements={selectedTask.requirements}
+                initialChecklist={selectedTask.checklist}
+                onUpdateChecklist={handleUpdateChecklist}
+              />
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-3 border-t border-border flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedTask(null)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-ink-primary text-xs font-semibold rounded-lg transition-colors"
+              >
+                Tutup & Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Dialog: Placeholder Integrasi Tambah dari Pengumuman */}
+      {activeModal === 'announcement' && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4"
+        >
+          <div className="bg-white border border-border rounded-2xl max-w-md w-full p-6 shadow-xl relative text-center">
+            <div className="w-12 h-12 rounded-xl bg-indigo-50 text-brand-primary flex items-center justify-center mx-auto mb-3">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <h3 className="text-base font-bold text-ink-primary">
+              Integrasi Input Pengumuman
+            </h3>
+            <p className="mt-2 text-xs sm:text-sm text-ink-muted leading-relaxed">
+              Tombol ini telah siap dan menyediakan callback ke alur ekstraksi chat Gemini (bagian Member Input/Preview).
+            </p>
+            <button
+              type="button"
+              onClick={() => setActiveModal(null)}
+              className="mt-5 w-full py-2 bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold rounded-lg transition-colors"
+            >
+              Mengerti
             </button>
           </div>
         </div>
+      )}
 
-        {/* Task Context Card */}
-        <div className="bg-surface rounded-2xl p-6 border border-hairline shadow-sm space-y-4">
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-accent-soft text-accent-ink border border-blue-200">
-                {task.course}
-              </span>
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                Sedang Dikerjakan
-              </span>
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>21 Okt 2026, 23:59 WIB</span>
-              </span>
+      {/* Modal Dialog: Placeholder Integrasi Tambah Manual */}
+      {activeModal === 'manual' && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4"
+        >
+          <div className="bg-white border border-border rounded-2xl max-w-md w-full p-6 shadow-xl relative text-center">
+            <div className="w-12 h-12 rounded-xl bg-slate-100 text-ink-secondary flex items-center justify-center mx-auto mb-3">
+              <Plus className="w-6 h-6" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-ink tracking-tight">
-              {task.title}
-            </h1>
-            <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
-              {task.description}
+            <h3 className="text-base font-bold text-ink-primary">
+              Integrasi Tambah Manual
+            </h3>
+            <p className="mt-2 text-xs sm:text-sm text-ink-muted leading-relaxed">
+              Tombol ini telah siap dan menyediakan callback ke formulir pembuatan tugas manual.
             </p>
-          </div>
-
-          {/* Ketentuan Resmi Pengumuman Dosen (Terpisah dari Saran AI) */}
-          <div className="border-l-4 border-blue-500 bg-slate-50/80 p-4 rounded-r-xl space-y-2">
-            <div className="flex items-center gap-2 text-xs font-bold text-ink">
-              <FileText className="w-4 h-4 text-accent" />
-              <span>Ketentuan Resmi dari Pengumuman Dosen</span>
-            </div>
-            <ul className="text-xs sm:text-sm text-ink-muted space-y-1 list-disc list-inside">
-              {task.requirements.map((req, i) => (
-                <li key={i}>{req}</li>
-              ))}
-            </ul>
+            <button
+              type="button"
+              onClick={() => setActiveModal(null)}
+              className="mt-5 w-full py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg transition-colors"
+            >
+              Mengerti
+            </button>
           </div>
         </div>
-
-        {/* Primary AI Task Checklist Component */}
-        <TaskChecklist
-          taskId={task.id}
-          taskTitle={task.title}
-          taskDescription={task.description}
-          taskRequirements={task.requirements}
-          initialChecklist={task.checklist}
-          onUpdateChecklist={handleUpdateChecklist}
-        />
-
-        {/* Supporting Context Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-          <div className="bg-surface rounded-xl p-4 border border-hairline flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 text-accent flex items-center justify-center">
-                <FileText className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="font-semibold text-ink">Lampiran Panduan</p>
-                <p className="text-ink-muted text-[11px]">Slide-Kuliah-07.pdf</p>
-              </div>
-            </div>
-            <Download className="w-4 h-4 text-ink-muted hover:text-ink cursor-pointer" />
-          </div>
-
-          <div className="bg-surface rounded-xl p-4 border border-hairline flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-success flex items-center justify-center">
-                <Users className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="font-semibold text-ink">Anggota Kelompok</p>
-                <p className="text-ink-muted text-[11px]">3 dari 3 mahasiswa</p>
-              </div>
-            </div>
-            <span className="text-[11px] font-semibold text-success">Lengkap</span>
-          </div>
-
-          <div className="bg-surface rounded-xl p-4 border border-hairline flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                <MessageSquare className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="font-semibold text-ink">Sumber Asli</p>
-                <p className="text-ink-muted text-[11px]">Grup WhatsApp IF-301</p>
-              </div>
-            </div>
-            <ExternalLink className="w-4 h-4 text-ink-muted hover:text-ink cursor-pointer" />
-          </div>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="py-6 border-t border-hairline bg-surface text-center text-xs text-ink-muted">
-        <p>TugasIn — Dari chat jadi checklist · Proyek Kelompok Hackathon 2026</p>
-      </footer>
+      )}
     </div>
   );
 };
+
 export default App;

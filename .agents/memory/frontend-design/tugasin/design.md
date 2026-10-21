@@ -1,119 +1,139 @@
-# Design Specification (design.md) — TugasIn Frontend & Checklist AI
+# Global Frontend Design Specification: TugasIn (Dashboard & Checklist AI)
 
 **Project:** TugasIn  
-**Tagline:** Dari chat jadi checklist.  
-**Design Direction:** *Academic Clarity & Kinetic Productivity (Light Mode)*  
+**Tagline:** Dari chat jadi checklist  
+**Modules:** Dashboard & Checklist AI  
+**Aesthetic Direction:** Modern Editorial Academic (Light Mode Default, High Contrast, Anti-Slop)  
 **Date:** 2026-10-21  
 **Target Viewport:** Responsive down to 360px mobile up to 1440px+ desktop.  
 
 ---
 
-## 1. Design Philosophy & Aesthetic Foundation
+## 1. Design Philosophy & Aesthetic Blueprint
 
-TugasIn dirancang dengan filosofi **Academic Clarity & Purposeful Speed**. Sebagai alat bantu mahasiswa yang menerima tugas kuliah padat dan terburu-buru, antarmuka tidak boleh membebani mata dengan ornamen artifisial, gradasi neon generik, atau tata letak berantakan.
+TugasIn dirancang dengan estetika akademik modern yang bersih, fungsional, dan menenangkan pikiran mahasiswa ("Academic Clarity & Kinetic Productivity"). Menghindari "AI Slop" seperti gradasi murahan atau elemen dekoratif tanpa guna. Antarmuka mengutamakan keterbacaan data, kontras tinggi (WCAG AA/AAA), struktur visual berbasis hairline border presisi, serta hierarki tipografi tajam.
 
-* **Light Mode Default**: Mengutamakan kanvas terang bersih (`#F8FAFC` slate-50) dengan kartu putih murni (`#FFFFFF`) dan batas hairline yang presisi (`#E2E8F0` slate-200).
-* **60-30-10 Rule**:
-  - **60% Kanvas & Netral**: Latar belakang slate-50 dan area kartu putih.
-  - **30% Struktur & Kontras Teks**: Border hairline slate-200, kartu sekunder slate-100, teks deep slate `#0F172A` dan muted `#64748B`.
-  - **10% Aksen Brand Semantik**: Indigo Blue `#3B82F6` / `#2563EB` untuk CTA utama, progress fill aktif, dan highlight "Saran AI" terarah.
-* **Tipografi Sans-Serif Tunggal**: Menggunakan **Plus Jakarta Sans** secara konsisten di seluruh elemen (heading, body, tombol, status). Hirarki dibentuk melalui bobot (`font-medium`, `font-semibold`, `font-bold`) dan kontras warna, bukan mencampur jenis font.
-
----
-
-## 2. Design System Tokens (CSS & Tailwind)
-
-### A. Semantic Color Palette
-
-| Token Name | CSS Custom Property | Tailwind Equivalent | Role & Context |
-|---|---|---|---|
-| Canvas Background | `--color-canvas` | `bg-slate-50` (`#F8FAFC`) | Latar utama aplikasi |
-| Surface Card | `--color-surface` | `bg-white` (`#FFFFFF`) | Kontainer kartu detail tugas & checklist |
-| Surface Subdued | `--color-surface-subdued` | `bg-slate-100` (`#F1F5F9`) | Background item checklist & skeleton |
-| Hairline Border | `--color-hairline` | `border-slate-200` (`#E2E8F0`) | Pemisah struktural 1px halus |
-| Hairline Strong | `--color-hairline-strong` | `border-slate-300` (`#CBD5E1`) | Border input fokus & checkbox aktif |
-| Ink Primary | `--color-ink` | `text-slate-900` (`#0F172A`) | Judul tugas, teks langkah utama |
-| Ink Muted | `--color-ink-muted` | `text-slate-500` (`#64748B`) | Deskripsi, timestamp, keterangan AI |
-| Primary Accent | `--color-accent` | `bg-blue-600` (`#2563EB`) | Tombol utama, progress bar active fill |
-| Primary Accent Hover | `--color-accent-hover` | `hover:bg-blue-700` (`#1D4ED8`) | Status hover CTA |
-| Accent Soft | `--color-accent-soft` | `bg-blue-50` (`#EFF6FF`) | Background badge "Saran AI" & item active |
-| Accent Text | `--color-accent-ink` | `text-blue-700` (`#1D4ED8`) | Teks badge "Saran AI" & link |
-| Success Accent | `--color-success` | `text-emerald-600` (`#059669`) | Checkbox tercentang, progres 100% |
-| Success Soft | `--color-success-soft` | `bg-emerald-50` (`#ECFDF5`) | Background status selesai |
-| Danger Accent | `--color-danger` | `text-rose-600` (`#E11D48`) | Tombol hapus & error state |
-| Danger Soft | `--color-danger-soft` | `bg-rose-50` (`#FFF1F2`) | Banner error & peringatan regenerate |
+### 60-30-10 Color System
+- **60% Canvas / Background:** Neutral Slate White (`#F8FAFC` canvas, `#FFFFFF` surface).
+- **30% Structure & Contrast:** Hairline borders (`#E2E8F0` / `border-slate-200`), muted text (`#64748B`), and deep slate typography (`#0F172A`).
+- **10% Brand & Semantic Accents:** 
+  - Primary Brand & CTA: `#4F46E5` (Indigo 600) / Hover `#4338CA` (Indigo 700).
+  - Status "Belum mulai": Neutral Slate `#F1F5F9` dengan teks `#475569`.
+  - Status "Dikerjakan": Amber Tint `#FEF3C7` dengan teks `#B45309` & dot `#F59E0B`.
+  - Status "Selesai": Emerald Tint `#ECFDF5` dengan teks `#047857` & icon `#10B981`.
+  - Indikator "Terlambat": Rose Tint `#FFE4E6` dengan teks `#BE123C` & badge border `#FDA4AF`.
+  - Aksen AI (Saran AI): Blue Tint `#EFF6FF` dengan teks `#1D4ED8` & border `#BFDBFE`.
 
 ---
 
-## 3. Typography Scale & Hierarchy
+## 2. Design System Tokens
 
-* **Font Family**: `'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`
-* **Hierarchy**:
-  - `Display / Modal Header`: `20px` (`text-xl`), `font-bold`, leading `1.3`, slate-900.
-  - `Section Title`: `15px` (`text-sm`), `font-semibold`, leading `1.4`, tracking `0.01em`, slate-800.
-  - `Body / Checklist Step`: `14px` (`text-sm`), `font-normal` (atau `font-medium`), leading `1.5`, slate-800.
-  - `Microcopy / Badge`: `12px` (`text-xs`), `font-semibold`, leading `1.2`, slate-600 / blue-700.
-  - `Counter / Telemetry`: `13px` (`text-xs`), `font-semibold`, tabular nums, slate-600.
+### CSS Custom Properties (`:root`)
+```css
+:root {
+  /* Canvas & Surfaces */
+  --color-canvas: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-surface-hover: #F1F5F9;
+  --color-surface-subtle: #F8FAFC;
 
----
+  /* Hairlines & Borders */
+  --color-border: #E2E8F0;
+  --color-border-subtle: #F1F5F9;
+  --color-border-strong: #CBD5E1;
 
-## 4. Visual & Imagery Architecture (Anti-Placeholder Standards)
+  /* Typography / Ink */
+  --color-ink-primary: #0F172A;
+  --color-ink-secondary: #475569;
+  --color-ink-muted: #64748B;
+  --color-ink-faint: #94A3B8;
 
-1. **Header & Context Iconography**:
-   - Penggunaan icon sistem seragam via **Lucide React** (`Sparkles`, `CheckCircle2`, `Circle`, `Pencil`, `RotateCcw`, `AlertCircle`, `X`, `ChevronRight`).
-2. **AI Distinctive Visual Cue (Saran AI Badge)**:
-   - Badge pill terkurasi: latar `bg-blue-50`, border `border-blue-200`, teks `text-blue-700`, dilengkapi ikon `Sparkles` mini (12px).
-   - Penegasan visual bahwa langkah adalah *saran pemecahan tugas*, bukan instruksi mutlak dari dosen.
-3. **Bespoke Parametric SVG / Data Graphics**:
-   - **Progress Telemetry Bar**: Bar horizontal tinggi 8px, rounded-full, latar slate-200, dengan progress fill gradasi lembut blue-500 ke blue-600, dan transisi lebar CSS halus (`transition-all duration-300 ease-out`).
-   - **Empty State Illustration**: Vector SVG terstruktur (outline gaya teknis dokumen + bintang inspirasi AI) tanpa clip-art murah.
+  /* Brand Accent */
+  --color-brand-primary: #4F46E5;
+  --color-brand-hover: #4338CA;
+  --color-brand-light: #EEF2FF;
 
----
+  /* AI Accent */
+  --color-accent: #2563EB;
+  --color-accent-hover: #1D4ED8;
+  --color-accent-soft: #EFF6FF;
+  --color-accent-ink: #1D4ED8;
 
-## 5. Component Blueprint & 4-State UI Matrix (Checklist AI)
+  /* Semantic Urgency & Status */
+  --color-status-not-started-bg: #F1F5F9;
+  --color-status-not-started-text: #475569;
 
-### A. State 1: Empty State (Belum ada checklist)
-* **Wadah**: Kartu putih dengan border dashed slate-300 atau border solid slate-200 di dalam Detail Tugas.
-* **Konten**:
-  - Ikon `Sparkles` dalam wadah rounded-full `bg-blue-50`.
-  - Teks: *"Belum ada langkah pengerjaan"*.
-  - Subteks: *"Minta Gemini memecah tugas ini menjadi 3–7 langkah terstruktur untuk memudahkan pengerjaan."*
-  - CTA Button: `[Sparkles] Buat langkah pengerjaan` (Solid Blue, full width di mobile, inline di desktop).
+  --color-status-in-progress-bg: #FEF3C7;
+  --color-status-in-progress-text: #92400E;
 
-### B. State 2: Loading State (Generasi sedang berlangsung)
-* **Feedback**: Tombol dalam keadaan disable + spinner halus, atau skeleton placeholder (3 baris skeleton berkedip halus dengan tinggi 44px dan border slate-200).
-* **Proteksi**: Klik ganda dicegah, scroll tetap responsif, tugas tidak boleh ditutup tanpa peringatan.
+  --color-status-done-bg: #ECFDF5;
+  --color-status-done-text: #065F46;
 
-### C. State 3: Error State (API gagal / timeout / kuota)
-* **Wadah**: Banner peringatan lembut `bg-rose-50 border border-rose-200 rounded-xl p-4`.
-* **Konten**:
-  - Ikon `AlertCircle` rose-600.
-  - Pesan jelas berbahasa Indonesia (contoh: *"Gagal membuat langkah pengerjaan: koneksi ke layanan AI terputus. Silakan coba lagi."*).
-  - Tombol aksi: `[RotateCcw] Coba Lagi` (outline rose-600) dan tombol fallback `Batal`.
-  - Data tugas asli tetap 100% utuh di layar.
+  --color-urgent-overdue-bg: #FFF1F2;
+  --color-urgent-overdue-border: #FECDD3;
+  --color-urgent-overdue-text: #BE123C;
 
-### D. State 4: Success State (Checklist aktif)
-* **Header Checklist**:
-  - Kiri: Label **"Langkah Pengerjaan"** + Badge **"Saran AI"**.
-  - Kanan: Telemetry progres (contoh: `2 dari 5 selesai · 40%`) + Tombol sekunder `[RotateCcw] Buat ulang`.
-* **Progress Bar**: Bar tipis di bawah header checklist memperlihatkan persentase selesai.
-* **Checklist Items List**:
-  - Setiap item berupa row berjarak 8px dengan hover effect lembut (`hover:bg-slate-50`).
-  - Checkbox custom 20px x 20px, rounded-md, warna border slate-300; saat checked: background emerald-600 dengan ikon check putih, teks langkah memiliki efek strikethrough warna slate-400.
-  - Aksi Edit: Ikon pensil muncul saat row di-hover (atau selalu tampak pada mobile).
-  - Mode Edit Inline: Teks langkah berganti menjadi textarea/input ringkas dengan tombol `Simpan` dan `Batal` (didukung keyboard shortcut Enter dan Esc).
-
-### E. Modal Dialog Konfirmasi Pembuatan Ulang (Regenerate Dialog)
-* **Backdrop**: Black/40 dengan blur ringan (`backdrop-blur-sm`).
-* **Modal Card**: Max width 420px, p-6, rounded-2xl, background white, shadow-xl.
-* **Isi**: Judul *"Buat ulang langkah pengerjaan?"*, penjelasan *"Checklist yang ada saat ini dan progres centangnya akan digantikan dengan saran baru dari Gemini. Tindakan ini tidak dapat dibatalkan."*
-* **Aksi**: Tombol sekunder *"Batal"* (slate-100) dan tombol utama *"Ya, Buat Ulang"* (blue-600).
+  /* Geometry & Elevation */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-full: 9999px;
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+  --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+}
+```
 
 ---
 
-## 6. Accessibility & Interaction Polish
+## 3. Typography Rules
 
-* **Keyboard Navigation**: Checkbox dapat di-fokus via Tab dan di-toggle via Space. Tombol edit/simpan/batal dapat diakses via keyboard.
-* **Focus States**: Visible focus ring `focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`.
-* **Screen Reader**: Checkbox memiliki `aria-label="Tandai [nama langkah] selesai"` dan state `aria-checked`.
-* **Zero Division Guard**: Persentase progres ditangani dengan rumus `total > 0 ? Math.round((completed / total) * 100) : 0`.
+- **Font Family Utama:** `Plus Jakarta Sans`, system-ui, -apple-system, sans-serif.
+- **Skala Tipografi:**
+  - `H1 Brand / Page Title`: 24px (1.5rem), `font-bold`, `tracking-tight`, text slate-900.
+  - `H2 Section Header`: 18px (1.125rem), `font-semibold`, text slate-900.
+  - `H3 Card Title`: 16px (1rem), `font-semibold`, text slate-900, `line-height: 1.35`.
+  - `Body Regular`: 14px (0.875rem), `font-normal`, text slate-600.
+  - `Label / Badge / Caption`: 12px (0.75rem), `font-medium`, `tracking-normal`.
+
+---
+
+## 4. Component Visual Architecture
+
+### A. Dashboard Components
+1. **Summary Stats Strip:**
+   - Kartu metrik kembar: Tugas Aktif (`not_started` + `in_progress`) dan Tugas Selesai (`done`).
+2. **Segmented Status Filter Tabs:**
+   - Filter pill: Semua, Belum mulai, Dikerjakan, Selesai (masing-masing dengan counter badge).
+3. **Task Card Component:**
+   - Header: Course badge & Status badge semantik.
+   - Body: Judul tugas tebal & potongan deskripsi.
+   - Footer: Indikator deadline (overdue badge, atau tanggal tanpa jam) dan checklist progress ratio.
+
+### B. Checklist AI Components (Detail Tugas)
+1. **Header & Badge Saran AI:**
+   - Pill terkurasi `bg-blue-50 border-blue-200 text-blue-700` dengan ikon `Sparkles` untuk memisahkan saran AI dari ketentuan resmi dosen.
+2. **Interactive Checklist Items:**
+   - Custom rounded checkbox dengan ikon check emerald saat tercentang.
+   - Strikethrough lembut pada langkah yang selesai.
+   - Inline editor untuk mengoreksi teks langkah (maksimal 200 karakter).
+3. **Telemetry Progress Bar:**
+   - Bar progress horizontal dengan transisi lebar CSS halus dan label pecahan (`X dari Y selesai · Z%`).
+4. **Regenerate Confirmation Guard:**
+   - Modal konfirmasi protektif sebelum pembuatan ulang checklist agar data dan progres aktif tidak hilang secara sengaja.
+
+### C. 4-State UI Matrix (Dashboard & Checklist)
+1. **Loading State:** Shimmering skeleton cards dengan efek pulsa lembut (`animate-pulse`).
+2. **Empty State:**
+   - Dashboard: Ilustrasi dokumen bersih dengan CTA tambah dari pengumuman / tambah manual.
+   - Checklist: Empty card dengan tombol `[Sparkles] Buat langkah pengerjaan`.
+3. **Error State:** Banner penanganan error bahasa Indonesia ramah pengguna dengan tombol `Coba Lagi` (retryable).
+4. **Success State:** Tampilan antarmuka lengkap dengan interaktivitas responsif.
+
+---
+
+## 5. Micro-interactions & A11y Standards
+
+- **Keyboard Focus:** Semua tombol, kartu, dan checkbox memiliki ring fokus yang terlihat (`focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2`).
+- **Target Sentuh Minimum:** Kontrol interaktif minimal 44x44 px pada mode seluler (viewport 360px).
+- **Zero Division Guard:** Kalkulasi progres selalu terlindungi dari pembagian nol (`total > 0 ? Math.round((completed / total) * 100) : 0`).
+- **Zero Horizontal Scroll:** Seluruh layout responsif dan tidak memunculkan scroll horizontal pada 360 px hingga monitor desktop 4K.

@@ -8,8 +8,12 @@
   --color-surface-subdued: #F1F5F9;
   --color-hairline: #E2E8F0;
   --color-hairline-strong: #CBD5E1;
+  --color-border: #E2E8F0;
   --color-ink: #0F172A;
+  --color-ink-primary: #0F172A;
+  --color-ink-secondary: #475569;
   --color-ink-muted: #64748B;
+  --color-brand-primary: #4F46E5;
   --color-accent: #2563EB;
   --color-accent-hover: #1D4ED8;
   --color-accent-soft: #EFF6FF;
@@ -20,7 +24,25 @@
 }
 
 body {
+  margin: 0;
+  padding: 0;
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   background-color: var(--color-canvas);
-  color: var(--color-ink);
+  color: var(--color-ink-primary);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

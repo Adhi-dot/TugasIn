@@ -1,16 +1,25 @@
 {
   "projectSlug": "tugasin",
-  "totalFRs": 3,
-  "totalScreens": 1,
+  "totalFRs": 4,
+  "totalScreens": 2,
   "screens": [
     {
-      "frId": "FR-01, FR-02, FR-03",
-      "screenId": "screen-01-task-detail-checklist",
+      "frId": "FR-01",
+      "screenId": "screen-01-dashboard",
+      "title": "Dashboard TugasIn — Dari chat jadi checklist",
+      "route": "/dashboard",
+      "purpose": "Memantau tugas aktif dan selesai, filter status, pengurutan deadline otomatis, dan ringkasan progres tugas mahasiswa.",
+      "primaryComponent": "DashboardView",
+      "stitchPromptBrief": "A modern, responsive Light-mode student task management dashboard for TugasIn ('Dari chat jadi checklist'). Clean white canvas (#FFFFFF) and slate-50 background, subtle border (#E2E8F0), crisp typography using Plus Jakarta Sans. Includes header with brand and action buttons '+ Tambah dari pengumuman' and '+ Tambah manual', a 2-card KPI summary showing 'Tugas Aktif' and 'Tugas Selesai', interactive status filter pills ('Semua', 'Belum mulai', 'Dikerjakan', 'Selesai'), and a multi-column task card grid. Each task card displays course badge, status badge in Indonesian, task title, clear deadline with overdue highlight or 'jam tidak disebutkan' label, and checklist completion progress bar. Accessible, semantic, mobile-first down to 360px."
+    },
+    {
+      "frId": "FR-02, FR-03, FR-04",
+      "screenId": "screen-02-task-detail-checklist",
       "title": "Detail Tugas & Checklist AI",
       "route": "/tasks/:id",
       "purpose": "Provide task inspection, explicit source requirements, and an interactive AI step-by-step checklist with progress tracking and editing.",
       "primaryComponent": "TaskChecklist",
-      "stitchPromptBrief": "A modern, high-craft light mode task detail interface for Indonesian college students. Clean slate-50 background with crisp white cards and slate-200 hairline borders. Header displays task title, course badge, and deadline info. Below is a section for 'Ketentuan dari pengumuman' followed by a distinct 'Langkah Pengerjaan (Saran AI)' card. The AI checklist includes a fractional completion counter (e.g. '3 dari 5 selesai'), animated progress bar, checklist items with custom rounded checkboxes and hover-visible edit triggers, an active inline editing mode, a friendly regenerate button with warning tooltip, and clear empty, loading skeleton, and error retry states. Academic productivity aesthetic with deep slate text and purposeful indigo-blue accent."
+      "stitchPromptBrief": "A modern, high-craft light mode task detail interface for Indonesian college students. Clean slate-50 background with crisp white cards and slate-200 hairline borders. Header displays task title, course badge, and deadline info. Below is a section for 'Ketentuan dari pengumuman' followed by a dedicated 'Langkah Pengerjaan (Saran AI)' card. The AI checklist includes a fractional completion counter (e.g. '3 dari 5 selesai'), animated progress bar, checklist items with custom rounded checkboxes and hover-visible edit triggers, an active inline editing mode, a friendly regenerate button with warning tooltip, and clear empty, loading skeleton, and error retry states. Academic productivity aesthetic with deep slate text and purposeful indigo-blue accent."
     }
   ]
 }

@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-canvas: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-surface-subdued: #F1F5F9;
+  --color-hairline: #E2E8F0;
+  --color-hairline-strong: #CBD5E1;
+  --color-ink: #0F172A;
+  --color-ink-muted: #64748B;
+  --color-accent: #2563EB;
+  --color-accent-hover: #1D4ED8;
+  --color-accent-soft: #EFF6FF;
+  --color-success: #059669;
+  --color-success-soft: #ECFDF5;
+  --color-danger: #E11D48;
+  --color-danger-soft: #FFF1F2;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+}

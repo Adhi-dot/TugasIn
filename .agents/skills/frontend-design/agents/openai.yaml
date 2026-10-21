@@ -1,0 +1,5 @@
+interface:
+  display_name: "Frontend Design"
+  short_description: "Transform architectural memory into distinctive UI design specifications"
+policy:
+  allow_implicit_invocation: false

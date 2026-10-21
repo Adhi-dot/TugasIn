@@ -1,0 +1,18 @@
+{
+  "projectId": "8926747726279835422",
+  "projectTitle": "TugasIn - Dari Chat Jadi Checklist",
+  "lastSyncTime": "2026-10-21T16:46:00Z",
+  "deviceType": "DESKTOP",
+  "designSystemAssetId": "2125508d5d414de398e09f2970d4eb09",
+  "screens": {
+    "screen-01-task-detail-checklist": {
+      "stitchScreenId": "501501918a2a4139aa4ab78f01c929f6",
+      "title": "Detail Tugas & AI Task Checklist - TugasIn",
+      "route": "/tasks/:id",
+      "width": 2560,
+      "height": 2644,
+      "sourceHtmlPath": ".agents/memory/screens/tugasin/screen-01-task-detail-checklist/source.html",
+      "screenshotPath": ".agents/memory/screens/tugasin/screen-01-task-detail-checklist/screenshot.png"
+    }
+  }
+}

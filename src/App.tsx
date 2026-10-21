@@ -6,6 +6,10 @@ import { DashboardView } from './components/dashboard/DashboardView';
 import { X, Sparkles, Plus, CheckCircle2, BookOpen } from 'lucide-react';
 
 export const App: React.FC = () => {
+  // Flag indicating if current state is temporary demo fixture (kept strictly in memory)
+  const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
+
+  // Initial user tasks strictly read from localStorage; new users always start with empty [] (Empty State)
   const [tasks, setTasks] = useState<Task[]>(() => {
     try {
       const saved = localStorage.getItem('tugasin_tasks');
@@ -18,7 +22,8 @@ export const App: React.FC = () => {
     } catch (e) {
       console.warn('Gagal membaca localStorage:', e);
     }
-    return MOCK_TASKS;
+    // New users start with EMPTY array to display authentic empty state
+    return [];
   });
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -26,14 +31,18 @@ export const App: React.FC = () => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [activeModal, setActiveModal] = useState<'announcement' | 'manual' | null>(null);
 
-  // Sync tasks to localStorage whenever tasks change
+  // Sync actual user tasks to localStorage only when NOT in temporary demo mode
   useEffect(() => {
+    if (isDemoMode) {
+      // Demo data must never be saved as user tasks
+      return;
+    }
     try {
       localStorage.setItem('tugasin_tasks', JSON.stringify(tasks));
     } catch (e) {
       console.warn('Gagal menyimpan ke localStorage:', e);
     }
-  }, [tasks]);
+  }, [tasks, isDemoMode]);
 
   // Handlers for action buttons
   const handleAddFromAnnouncement = () => {
@@ -48,15 +57,22 @@ export const App: React.FC = () => {
     setSelectedTask(task);
   };
 
-  // Quick Demo Controls for testing 4-State UI
+  // Quick Demo Controls for development (Explicit action only)
   const handleLoadMockData = () => {
+    setIsDemoMode(true);
     setTasks(MOCK_TASKS);
     setErrorMessage(null);
     setIsLoading(false);
   };
 
   const handleClearAllTasks = () => {
+    setIsDemoMode(false);
     setTasks([]);
+    try {
+      localStorage.removeItem('tugasin_tasks');
+    } catch (e) {
+      console.warn('Gagal menghapus localStorage:', e);
+    }
     setErrorMessage(null);
     setIsLoading(false);
   };
@@ -94,47 +110,51 @@ export const App: React.FC = () => {
         />
       </div>
 
-      {/* Developer State Testing Toolbar (Bottom bar for verifying all 4 states) */}
-      <aside
-        aria-label="Toolbar Pengujian Pengembang"
-        className="bg-white border-t border-border px-4 py-2 text-xs text-ink-muted flex flex-wrap items-center justify-between gap-3 sticky bottom-0 z-20 shadow-sm"
-      >
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-ink-primary">Status Uji Dashboard:</span>
-          <span>{tasks.length} Tugas Tersimpan</span>
-        </div>
+      {/* Developer Testing Toolbar: STRICTLY RENDERED IN DEV MODE ONLY */}
+      {import.meta.env.DEV && (
+        <aside
+          aria-label="Toolbar Pengujian Pengembang"
+          className="bg-white border-t border-border px-4 py-2 text-xs text-ink-muted flex flex-wrap items-center justify-between gap-3 sticky bottom-0 z-20 shadow-sm"
+        >
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-ink-primary">Status Uji Dashboard:</span>
+            <span>
+              {isDemoMode ? 'Mode Data Demo (Dalam Memori)' : `${tasks.length} Tugas Tersimpan`}
+            </span>
+          </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleLoadMockData}
-            className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-ink-secondary rounded font-medium transition-colors"
-          >
-            Muat Data Demo (5)
-          </button>
-          <button
-            type="button"
-            onClick={handleClearAllTasks}
-            className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-ink-secondary rounded font-medium transition-colors"
-          >
-            Uji State Kosong (0)
-          </button>
-          <button
-            type="button"
-            onClick={handleSimulateLoading}
-            className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-ink-secondary rounded font-medium transition-colors"
-          >
-            Uji Loading Skeleton
-          </button>
-          <button
-            type="button"
-            onClick={handleSimulateError}
-            className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded font-medium transition-colors"
-          >
-            Uji Error State
-          </button>
-        </div>
-      </aside>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleLoadMockData}
+              className="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-brand-primary rounded font-medium transition-colors"
+            >
+              Muat Data Demo (5)
+            </button>
+            <button
+              type="button"
+              onClick={handleClearAllTasks}
+              className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-ink-secondary rounded font-medium transition-colors"
+            >
+              Uji State Kosong (0)
+            </button>
+            <button
+              type="button"
+              onClick={handleSimulateLoading}
+              className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-ink-secondary rounded font-medium transition-colors"
+            >
+              Uji Loading Skeleton
+            </button>
+            <button
+              type="button"
+              onClick={handleSimulateError}
+              className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded font-medium transition-colors"
+            >
+              Uji Error State
+            </button>
+          </div>
+        </aside>
+      )}
 
       {/* Modal Dialog: Detail Tugas (Callback Saat Kartu Dipilih) */}
       {selectedTask && (

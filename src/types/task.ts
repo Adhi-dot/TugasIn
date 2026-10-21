@@ -21,17 +21,17 @@ export interface Task {
   title: string;
   course: string | null;
   description: string;
-  sourceText?: string;
-  sourceMessageDate?: string | null; // YYYY-MM-DD
-  dueDate: string | null;            // YYYY-MM-DD
-  dueTime: string | null;            // HH:mm
-  sourceTimezone: string | null;     // e.g. "WIB"
-  displayTimezone: string;           // e.g. "WIB" or "Asia/Jakarta"
-  requirements: string[];
-  status: TaskStatus;
-  checklist: ChecklistItem[];
-  createdAt: string;                 // ISO string
-  updatedAt: string;                 // ISO string
+  sourceText: string;                // Teks pengumuman; string kosong "" untuk input manual
+  sourceMessageDate: string | null;  // Acuan tanggal relatif (YYYY-MM-DD atau null)
+  dueDate: string | null;            // Tanggal penuh valid (YYYY-MM-DD atau null)
+  dueTime: string | null;            // HH:mm atau null, hanya jika dueDate tersedia
+  sourceTimezone: string | null;     // Zona yang disebutkan/dikonfirmasi (atau null)
+  displayTimezone: string;           // Zona untuk tampilan dan perhitungan indikator (IANA atau label terdaftar)
+  requirements: string[];            // Ketentuan dari sumber
+  status: TaskStatus;                // not_started | in_progress | done
+  checklist: ChecklistItem[];        // Langkah pengerjaan
+  createdAt: string;                 // ISO timestamp
+  updatedAt: string;                 // ISO timestamp
 }
 
 export interface TaskDeadlineInfo {

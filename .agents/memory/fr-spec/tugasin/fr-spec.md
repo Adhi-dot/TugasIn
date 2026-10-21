@@ -61,3 +61,21 @@
       * Footer Card: Indikator Deadline (icon kalender/jam, badge "Terlambat" jika overdue) & Progres Checklist (progress bar + label teks rasio).
 - **Stitch MCP Generation Brief:**
   > "A clean, modern, high-contrast light-mode task dashboard for university students named TugasIn ('Dari chat jadi checklist'). Clean white canvas (#FFFFFF) with slate-50 background, hairline borders (#E2E8F0), and crisp Plus Jakarta Sans typography. Top header features the brand with primary action buttons 'Tambah dari pengumuman' and 'Tambah manual'. A 2-card metric summary displays 'Tugas Aktif' and 'Tugas Selesai'. Below is a segment filter bar with tabs 'Semua', 'Belum mulai', 'Dikerjakan', 'Selesai'. The main feed presents cards with course tags, task titles, deadline status badges (overdue in rose, upcoming in slate, 'jam tidak disebutkan' label), and checklist progress indicators. Fully responsive down to 360px without horizontal scroll."
+
+---
+
+## 3. Integration Boundaries & Data Contract Alignment
+
+### A. Pembagian Tanggung Jawab Antar-Fitur
+- **Member Dashboard (Pekerjaan Ini):** Tampilan dashboard, kalkulasi ringkasan metrik tugas aktif vs selesai, filter status, pencarian, dan pengurutan multi-tier deterministik.
+- **Member Task Management / Fondasi:** Operasi tambah tugas manual, edit detail tugas, hapus tugas dengan konfirmasi, pengubahan status tugas, dan penyimpanan bersama (`localStorage` / global context).
+- **Member Checklist:** Pembuatan saran checklist AI Gemini (`POST /api/generate-checklist`), penambahan langkah manual, dan interaksi mencentang/mengedit langkah checklist.
+- **Member Input & Preview:** Form input tempel pengumuman, backend ekstraksi Gemini (`POST /api/extract-task`), serta antarmuka preview dan koreksi draft tugas sebelum disimpan.
+
+### B. Keselarasan Kontrak Model Task (PRD Bagian 9)
+Model `Task` diselaraskan secara presisi tanpa modifikasi opsional sepihak:
+1. `sourceText: string` — Bertipe string wajib, berisi string kosong `""` untuk input manual.
+2. `sourceMessageDate: string | null` — Bertipe string YYYY-MM-DD atau null jika tidak ada acuan tanggal relatif.
+3. `displayTimezone: string` — Menggunakan pengenal zona IANA (contoh: `Asia/Jakarta`, `Asia/Makassar`, `Asia/Jayapura`), di mana nilai awal mengikuti runtime peramban pengguna (bukan fallback WIB diam-diam).
+4. `sourceTimezone: string | null` — Zona waktu yang disebutkan eksplisit pada pengumuman atau null.
+5. Pemisahan fixture: Fixture `MOCK_TASKS` dan toolbar pengembang hanya dimuat saat development (`import.meta.env.DEV`), pengguna baru selalu disajikan *Empty State* otentik.

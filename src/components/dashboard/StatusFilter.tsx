@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, Globe } from 'lucide-react';
 import { TaskFilter, DashboardSummary } from '../../types/task';
+import { resolveIanaTimezone, getTimezoneDisplayLabel } from '../../lib/deadline';
 
 interface StatusFilterProps {
   currentFilter: TaskFilter;
@@ -17,8 +18,10 @@ export const StatusFilter: React.FC<StatusFilterProps> = ({
   summary,
   searchQuery,
   onSearchChange,
-  timezoneLabel = 'WIB (UTC+7)',
+  timezoneLabel,
 }) => {
+  const activeTz = resolveIanaTimezone(null);
+  const resolvedLabel = timezoneLabel || `${getTimezoneDisplayLabel(activeTz)} (${activeTz})`;
   const filterTabs: Array<{ id: TaskFilter; label: string; count: number }> = [
     { id: 'all', label: 'Semua', count: summary.totalCount },
     { id: 'not_started', label: 'Belum mulai', count: summary.notStartedCount },
@@ -84,11 +87,11 @@ export const StatusFilter: React.FC<StatusFilterProps> = ({
         </div>
 
         <div
-          title={`Zona waktu kalkulasi deadline: ${timezoneLabel}`}
+          title={`Zona waktu kalkulasi deadline: ${resolvedLabel}`}
           className="hidden sm:flex items-center gap-1 text-[11px] font-medium text-ink-muted bg-slate-100 border border-border px-2.5 py-1.5 rounded-lg shrink-0"
         >
           <Globe className="w-3.5 h-3.5 text-ink-secondary" />
-          <span>{timezoneLabel}</span>
+          <span>{resolvedLabel}</span>
         </div>
       </div>
     </div>

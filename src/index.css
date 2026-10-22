@@ -3,83 +3,106 @@
 @tailwind utilities;
 
 :root {
-  /* Surface & Canvas Tokens */
-  --color-canvas: #F8FAFC;
-  --color-surface: #FFFFFF;
-  --color-surface-subdued: #F1F5F9;
-  --color-surface-subtle: #F1F5F9;
+  /* Stitch Theme Tokens */
+  --color-canvas: #f9faf6;
+  --color-ivory: #f7f8f4;
+  --color-forest-green: #214f3e;
+  --color-dark-ink: #233a30;
+  --color-lime-accent: #d6edaa;
+
+  --color-surface: #ffffff;
+  --color-surface-subdued: #f3f4f0;
+  --color-surface-subtle: #f3f4f0;
 
   /* Structure & Ink Tokens */
-  --color-border: #E2E8F0;
-  --color-hairline: #E2E8F0;
-  --color-hairline-strong: #CBD5E1;
-  --color-ink: #0F172A;
-  --color-ink-primary: #0F172A;
-  --color-ink-secondary: #475569;
-  --color-ink-muted: #64748B;
-  --color-ink-subtle: #94A3B8;
-  --color-ink-faint: #94A3B8;
+  --color-border: #e2e3df;
+  --color-hairline: #e2e3df;
+  --color-hairline-strong: #c0c8c2;
+  --color-ink: #233a30;
+  --color-ink-primary: #1a1c1a;
+  --color-ink-secondary: #414944;
+  --color-ink-muted: #717974;
+  --color-ink-subtle: #a0a8a2;
+  --color-ink-faint: #c0c8c2;
 
   /* Brand Accents */
-  --color-brand-primary: #4F46E5;
-  --color-brand-hover: #4338CA;
-  --color-brand-light: #EEF2FF;
-  --color-primary: #059669;
-  --color-primary-hover: #047857;
-  --color-primary-light: #ECFDF5;
+  --color-brand-primary: #214f3e;
+  --color-brand-hover: #193e31;
+  --color-brand-light: #d6edaa;
+  --color-primary: #214f3e;
+  --color-primary-hover: #193e31;
+  --color-primary-light: #e8f5ec;
 
-  /* AI Accent (Checklist) */
-  --color-accent: #2563EB;
-  --color-accent-hover: #1D4ED8;
-  --color-accent-soft: #EFF6FF;
-  --color-accent-ink: #1D4ED8;
+  /* AI Accent */
+  --color-accent: #d6edaa;
+  --color-accent-hover: #c4e094;
+  --color-accent-soft: #f1f8e5;
+  --color-accent-ink: #233a30;
 
   /* Status Colors */
-  --color-success: #059669;
-  --color-success-soft: #ECFDF5;
-  --color-warning: #D97706;
-  --color-warning-light: #FFFBEB;
-  --color-danger: #E11D48;
-  --color-danger-soft: #FFF1F2;
-  --color-error: #DC2626;
-  --color-error-light: #FEF2F2;
+  --color-success: #214f3e;
+  --color-success-soft: #e8f5ec;
+  --color-warning: #526530;
+  --color-warning-light: #d4eba8;
+  --color-danger: #ba1a1a;
+  --color-danger-soft: #ffdad6;
+  --color-error: #ba1a1a;
+  --color-error-light: #ffdad6;
 
   /* Elevation Shadows */
-  --shadow-subtle: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.05);
-  --shadow-elevated: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
-  --shadow-modal: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+  --shadow-subtle: 0 1px 2px 0 rgba(35, 58, 48, 0.05);
+  --shadow-elevated: 0 4px 6px -1px rgba(35, 58, 48, 0.08), 0 2px 4px -2px rgba(35, 58, 48, 0.04);
+  --shadow-modal: 0 20px 25px -5px rgba(35, 58, 48, 0.15), 0 8px 10px -6px rgba(35, 58, 48, 0.1);
 
   /* Radius */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
   --radius-full: 9999px;
 }
 
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   background-color: var(--color-canvas);
   color: var(--color-ink-primary);
 }
 
-/* Custom scrollbar for clean reading */
+/* Material Symbols icon helper to avoid unstyled text ligatures */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  vertical-align: middle;
+}
+
+/* Custom scrollbar matching Stitch design */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #f3f4f0;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 9999px;
+  background: #c0c8c2;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #717974;
 }

@@ -2,15 +2,7 @@
  * Component: ManualTaskModal
  * Form Modal Tambah Tugas Manual
  * Aligned with PRD US-04, Section 8, 9 & AGENTS.md
- * 
- * Rules:
- * 1. Tidak memanggil Gemini API.
- * 2. Judul wajib setelah trim, maks 150 karakter.
- * 3. Mata kuliah opsional, maks 100 karakter.
- * 4. Waktu tidak boleh disimpan tanpa tanggal.
- * 5. Cegah simpan ganda (double-save prevention).
- * 6. Jika penyimpanan gagal, pertahankan isi formulir di memori.
- * 7. Pembatalan tidak mengubah data tersimpan.
+ * Styled to match Stitch Design System
  */
 
 import React, { useState } from 'react';
@@ -36,7 +28,7 @@ export const ManualTaskModal: React.FC<ManualTaskModalProps> = ({
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [dueTime, setDueTime] = useState('');
-  const [displayTimezone, setDisplayTimezone] = useState(detectedTimezone);
+  const [displayTimezone] = useState(detectedTimezone);
   const [requirements, setRequirements] = useState<string[]>(['']);
 
   const [errors, setErrors] = useState<{
@@ -103,32 +95,40 @@ export const ManualTaskModal: React.FC<ManualTaskModalProps> = ({
     setErrors({});
     setIsSubmitting(true);
 
+    const cleanedRequirements = requirements
+      .map((r) => r.trim())
+      .filter((r) => r.length > 0);
+
+    const draft: ManualTaskDraft = {
+      title: trimmedTitle,
+      course: trimmedCourse ? trimmedCourse : null,
+      description: description.trim(),
+      dueDate: hasDate ? dueDate : null,
+      dueTime: hasDate && hasTime ? dueTime : null,
+      displayTimezone: displayTimezone || detectedTimezone,
+      requirements: cleanedRequirements,
+    };
+
     try {
-      const cleanRequirements = requirements
-        .map((r) => r.trim())
-        .filter((r) => r.length > 0);
+      const res = await onSubmit(draft);
 
-      const result = await onSubmit({
-        title: trimmedTitle,
-        course: trimmedCourse.length > 0 ? trimmedCourse : null,
-        description: description.trim(),
-        dueDate: hasDate ? dueDate.trim() : null,
-        dueTime: hasDate && hasTime ? dueTime.trim() : null,
-        displayTimezone,
-        requirements: cleanRequirements,
-      });
-
-      if (result.success) {
+      if (res.success) {
+        // Reset and close
+        setTitle('');
+        setCourse('');
+        setDescription('');
+        setDueDate('');
+        setDueTime('');
+        setRequirements(['']);
         setIsSubmitting(false);
         onClose();
       } else {
-        // If storage write failed, keep form open and display error
         setIsSubmitting(false);
-        setErrors({ general: result.error || 'Gagal menyimpan tugas. Formulir tetap terbuka untuk dicoba lagi.' });
+        setErrors({ general: res.error || 'Penyimpanan lokal gagal. Formulir Anda tidak hilang.' });
       }
     } catch {
       setIsSubmitting(false);
-      setErrors({ general: 'Terjadi kesalahan tak terduga saat menyimpan tugas.' });
+      setErrors({ general: 'Terjadi kegagalan penyimpanan. Data Anda tetap tersimpan di formulir ini.' });
     }
   };
 
@@ -136,45 +136,45 @@ export const ManualTaskModal: React.FC<ManualTaskModalProps> = ({
     <div
       role="dialog"
       aria-modal="true"
-      aria-labelledby="manual-task-modal-title"
-      className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-150"
+      aria-labelledby="manual-task-title"
+      className="fixed inset-0 z-50 bg-dark-ink/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
     >
-      <div className="bg-white border border-border rounded-2xl max-w-2xl w-full p-5 sm:p-7 shadow-2xl relative my-auto max-h-[92vh] overflow-y-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-border">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-brand-light text-brand-primary flex items-center justify-center">
-              <Plus className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 id="manual-task-modal-title" className="text-lg font-bold text-ink-primary">
-                Tambah Tugas Manual
-              </h2>
-              <p className="text-xs text-ink-muted">
-                Catat tugas langsung tanpa melalui ekstraksi pengumuman.
-              </p>
-            </div>
+      <div className="bg-surface-container-lowest border border-outline-variant/40 rounded-2xl max-w-2xl w-full max-h-[92vh] overflow-y-auto p-5 sm:p-7 shadow-2xl relative my-auto space-y-5 animate-in fade-in zoom-in-95 duration-150">
+        {/* Close Button */}
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={isSubmitting}
+          className="absolute top-4 right-4 p-2 rounded-lg text-outline hover:text-dark-ink hover:bg-surface-container-high transition-colors"
+          aria-label="Tutup formulir tambah manual"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Modal Header */}
+        <div className="text-left space-y-1 pr-8">
+          <div className="flex items-center gap-2">
+            <span className="w-8 h-8 rounded-lg bg-surface-container-low border border-outline-variant/30 flex items-center justify-center text-forest-green">
+              <Plus className="w-4 h-4" />
+            </span>
+            <h2 id="manual-task-title" className="text-lg sm:text-xl font-bold text-dark-ink">
+              Tambah Tugas Manual
+            </h2>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="p-2 rounded-lg text-ink-muted hover:text-ink-primary hover:bg-slate-100 transition-colors"
-            aria-label="Tutup form tambah manual"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <p className="text-xs text-on-surface-variant">
+            Catat tugas langsung tanpa melalui ekstraksi pengumuman AI. Data tersimpan di browser Anda.
+          </p>
         </div>
 
-        {/* Storage / General Error Alert */}
+        {/* General Error Banner */}
         {errors.general && (
           <div
             role="alert"
-            className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-xs text-rose-800"
+            className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-xs text-rose-800 text-left"
           >
             <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold">Penyimpanan Gagal</p>
+              <p className="font-bold">Gagal Menyimpan</p>
               <p>{errors.general}</p>
             </div>
           </div>
@@ -185,10 +185,10 @@ export const ManualTaskModal: React.FC<ManualTaskModalProps> = ({
           {/* Judul Tugas */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label htmlFor="manual-title" className="text-xs font-semibold text-ink-primary">
-                Judul Tugas <span className="text-rose-500">*</span>
+              <label htmlFor="manual-title" className="text-xs font-bold text-dark-ink">
+                Judul Tugas <span className="text-rose-600">*</span>
               </label>
-              <span className="text-[11px] text-ink-muted">
+              <span className="text-[11px] text-outline">
                 {title.length}/150 karakter
               </span>
             </div>
@@ -203,14 +203,14 @@ export const ManualTaskModal: React.FC<ManualTaskModalProps> = ({
                 if (errors.title) setErrors((prev) => ({ ...prev, title: undefined }));
               }}
               placeholder="Contoh: Laporan Akhir Praktikum Jaringan Komputer"
-              className={`w-full px-3.5 py-2.5 text-sm rounded-lg border bg-surface transition-all focus:outline-none focus:ring-2 focus:ring-brand-primary/20 ${
+              className={`w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-lg border bg-surface-container-lowest transition-all focus:outline-none focus:ring-2 focus:ring-forest-green ${
                 errors.title
                   ? 'border-rose-400 focus:border-rose-500'
-                  : 'border-border focus:border-brand-primary'
+                  : 'border-outline-variant/50 focus:border-forest-green'
               }`}
             />
             {errors.title && (
-              <p className="mt-1 text-xs text-rose-600 flex items-center gap-1">
+              <p className="mt-1 text-xs text-rose-600 flex items-center gap-1 font-medium">
                 <AlertCircle className="w-3.5 h-3.5" />
                 {errors.title}
               </p>
@@ -220,11 +220,11 @@ export const ManualTaskModal: React.FC<ManualTaskModalProps> = ({
           {/* Mata Kuliah */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label htmlFor="manual-course" className="text-xs font-semibold text-ink-primary flex items-center gap-1.5">
-                <BookOpen className="w-3.5 h-3.5 text-ink-muted" />
+              <label htmlFor="manual-course" className="text-xs font-bold text-dark-ink flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5 text-forest-green" />
                 <span>Mata Kuliah (Opsional)</span>
               </label>
-              <span className="text-[11px] text-ink-muted">
+              <span className="text-[11px] text-outline">
                 {course.length}/100 karakter
               </span>
             </div>
@@ -238,14 +238,14 @@ export const ManualTaskModal: React.FC<ManualTaskModalProps> = ({
                 if (errors.course) setErrors((prev) => ({ ...prev, course: undefined }));
               }}
               placeholder="Contoh: Sistem Basis Data"
-              className={`w-full px-3.5 py-2.5 text-sm rounded-lg border bg-surface transition-all focus:outline-none focus:ring-2 focus:ring-brand-primary/20 ${
+              className={`w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-lg border bg-surface-container-lowest transition-all focus:outline-none focus:ring-2 focus:ring-forest-green ${
                 errors.course
                   ? 'border-rose-400 focus:border-rose-500'
-                  : 'border-border focus:border-brand-primary'
+                  : 'border-outline-variant/50 focus:border-forest-green'
               }`}
             />
             {errors.course && (
-              <p className="mt-1 text-xs text-rose-600 flex items-center gap-1">
+              <p className="mt-1 text-xs text-rose-600 flex items-center gap-1 font-medium">
                 <AlertCircle className="w-3.5 h-3.5" />
                 {errors.course}
               </p>
@@ -254,7 +254,7 @@ export const ManualTaskModal: React.FC<ManualTaskModalProps> = ({
 
           {/* Deskripsi */}
           <div>
-            <label htmlFor="manual-desc" className="block text-xs font-semibold text-ink-primary mb-1.5">
+            <label htmlFor="manual-desc" className="block text-xs font-bold text-dark-ink mb-1.5">
               Deskripsi / Ringkasan (Opsional)
             </label>
             <textarea
@@ -263,21 +263,21 @@ export const ManualTaskModal: React.FC<ManualTaskModalProps> = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Tambahkan detail ringkasan pengerjaan tugas..."
-              className="w-full px-3.5 py-2.5 text-sm rounded-lg border border-border bg-surface transition-all focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary leading-relaxed"
+              className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-lg border border-outline-variant/50 bg-surface-container-lowest transition-all focus:outline-none focus:ring-2 focus:ring-forest-green focus:border-forest-green leading-relaxed resize-y"
             />
           </div>
 
           {/* Deadline: Tanggal, Waktu & Zona Waktu */}
-          <div className="p-3.5 bg-slate-50 border border-border rounded-xl space-y-3">
-            <span className="text-xs font-bold text-ink-primary flex items-center gap-1.5">
-              <Calendar className="w-4 h-4 text-brand-primary" />
+          <div className="p-3.5 bg-surface-container-low border border-outline-variant/40 rounded-xl space-y-3">
+            <span className="text-xs font-bold text-dark-ink flex items-center gap-1.5">
+              <Calendar className="w-4 h-4 text-forest-green" />
               <span>Batas Waktu Pengumpulan (Deadline)</span>
             </span>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Tanggal */}
               <div>
-                <label htmlFor="manual-date" className="block text-[11px] font-semibold text-ink-secondary mb-1">
+                <label htmlFor="manual-date" className="block text-xs font-semibold text-on-surface-variant mb-1">
                   Tanggal Batas
                 </label>
                 <input
@@ -288,73 +288,48 @@ export const ManualTaskModal: React.FC<ManualTaskModalProps> = ({
                     setDueDate(e.target.value);
                     if (errors.dueTime) setErrors((prev) => ({ ...prev, dueTime: undefined }));
                   }}
-                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-border bg-white text-ink-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
+                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-outline-variant/50 bg-surface-container-lowest text-dark-ink focus:outline-none focus:ring-2 focus:ring-forest-green"
                 />
               </div>
 
               {/* Jam */}
               <div>
-                <label htmlFor="manual-time" className="block text-[11px] font-semibold text-ink-secondary mb-1 flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-ink-muted" />
+                <label htmlFor="manual-time" className="block text-xs font-semibold text-on-surface-variant mb-1 flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-outline" />
                   <span>Jam (Opsional)</span>
                 </label>
                 <input
                   id="manual-time"
                   type="time"
                   value={dueTime}
+                  disabled={!dueDate}
                   onChange={(e) => {
                     setDueTime(e.target.value);
                     if (errors.dueTime) setErrors((prev) => ({ ...prev, dueTime: undefined }));
                   }}
-                  className={`w-full px-3 py-2 text-xs sm:text-sm rounded-lg border bg-white text-ink-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 ${
-                    errors.dueTime ? 'border-rose-400 focus:border-rose-500' : 'border-border focus:border-brand-primary'
-                  }`}
+                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-outline-variant/50 bg-surface-container-lowest text-dark-ink focus:outline-none focus:ring-2 focus:ring-forest-green disabled:opacity-50"
                 />
-              </div>
-
-              {/* Zona Waktu */}
-              <div>
-                <label htmlFor="manual-tz" className="block text-[11px] font-semibold text-ink-secondary mb-1">
-                  Zona Waktu Tampilan
-                </label>
-                <select
-                  id="manual-tz"
-                  value={displayTimezone}
-                  onChange={(e) => setDisplayTimezone(e.target.value)}
-                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-border bg-white text-ink-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
-                >
-                  <option value="Asia/Jakarta">WIB (Asia/Jakarta)</option>
-                  <option value="Asia/Makassar">WITA (Asia/Makassar)</option>
-                  <option value="Asia/Jayapura">WIT (Asia/Jayapura)</option>
-                  <option value="UTC">UTC</option>
-                </select>
               </div>
             </div>
 
             {errors.dueTime && (
-              <p className="text-xs text-rose-600 flex items-center gap-1">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              <p className="text-xs text-rose-600 flex items-center gap-1 font-medium">
+                <AlertCircle className="w-3.5 h-3.5" />
                 {errors.dueTime}
-              </p>
-            )}
-
-            {!dueDate && (
-              <p className="text-[11px] text-ink-muted">
-                Boleh dikosongkan jika tugas belum memiliki batas tenggat.
               </p>
             )}
           </div>
 
-          {/* Ketentuan Tambahan */}
-          <div className="space-y-2 pt-1">
+          {/* Ketentuan Khusus */}
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-ink-primary">
-                Ketentuan / Catatan Tambahan (Opsional)
+              <label className="text-xs font-bold text-dark-ink">
+                Ketentuan Tugas (Opsional)
               </label>
               <button
                 type="button"
                 onClick={handleAddRequirement}
-                className="text-xs font-semibold text-brand-primary hover:text-brand-hover inline-flex items-center gap-1"
+                className="text-xs text-forest-green font-bold hover:underline inline-flex items-center gap-1"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Tambah Ketentuan</span>
@@ -362,21 +337,21 @@ export const ManualTaskModal: React.FC<ManualTaskModalProps> = ({
             </div>
 
             <div className="space-y-2">
-              {requirements.map((req, idx) => (
-                <div key={idx} className="flex items-center gap-2">
+              {requirements.map((req, index) => (
+                <div key={index} className="flex items-center gap-2">
                   <input
                     type="text"
                     value={req}
-                    onChange={(e) => handleUpdateRequirement(idx, e.target.value)}
-                    placeholder={`Ketentuan ${idx + 1} (misal: Format PDF, maks 5 halaman)`}
-                    className="flex-1 px-3 py-2 text-xs sm:text-sm rounded-lg border border-border bg-surface focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
+                    onChange={(e) => handleUpdateRequirement(index, e.target.value)}
+                    placeholder={`Ketentuan ${index + 1} (cth: Format PDF maks 3 orang)`}
+                    className="flex-1 px-3 py-2 text-xs sm:text-sm rounded-lg border border-outline-variant/50 bg-surface-container-lowest text-dark-ink focus:outline-none focus:ring-2 focus:ring-forest-green"
                   />
                   {requirements.length > 1 && (
                     <button
                       type="button"
-                      onClick={() => handleRemoveRequirement(idx)}
-                      className="p-2 text-ink-muted hover:text-rose-600 rounded-lg transition-colors"
-                      aria-label={`Hapus ketentuan ${idx + 1}`}
+                      onClick={() => handleRemoveRequirement(index)}
+                      className="p-2 text-outline hover:text-rose-600 rounded-lg hover:bg-surface-container-high transition-colors"
+                      title="Hapus baris ketentuan"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -386,20 +361,20 @@ export const ManualTaskModal: React.FC<ManualTaskModalProps> = ({
             </div>
           </div>
 
-          {/* Footer Controls */}
-          <div className="pt-4 border-t border-border flex items-center justify-end gap-3">
+          {/* Action Buttons */}
+          <div className="pt-3 border-t border-outline-variant/30 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2.5 rounded-lg border border-border text-xs sm:text-sm font-semibold text-ink-secondary hover:text-ink-primary hover:bg-slate-50 transition-colors"
+              className="px-4 py-2.5 text-xs sm:text-sm font-bold text-dark-ink bg-surface-container-lowest border border-outline-variant/50 hover:bg-surface-container-high rounded-xl transition-colors"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs sm:text-sm font-semibold shadow-sm transition-all disabled:opacity-50 active:scale-95 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-bold rounded-xl bg-forest-green hover:bg-[#193e31] text-white shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-forest-green focus:ring-offset-2 active:scale-95 disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>

@@ -13,14 +13,14 @@ export const ChecklistProgress: React.FC<ChecklistProgressProps> = ({
 }) => {
   return (
     <div className="w-full space-y-2">
-      <div className="flex items-center justify-between text-xs sm:text-sm font-semibold text-ink-muted">
-        <span>Progres Pengerjaan</span>
-        <span className="tabular-nums font-medium text-ink">
+      <div className="flex items-center justify-between text-xs font-semibold text-outline">
+        <span className="font-bold text-dark-ink">Progres Checklist</span>
+        <span className="tabular-nums font-bold text-forest-green">
           {completed} dari {total} selesai ({percentage}%)
         </span>
       </div>
       <div
-        className="w-full bg-slate-200 h-2 rounded-full overflow-hidden"
+        className="w-full bg-surface-container-low border border-outline-variant/30 h-2.5 rounded-full overflow-hidden"
         role="progressbar"
         aria-valuenow={percentage}
         aria-valuemin={0}
@@ -29,7 +29,7 @@ export const ChecklistProgress: React.FC<ChecklistProgressProps> = ({
       >
         <div
           className={`h-full transition-all duration-300 ease-out rounded-full ${
-            percentage === 100 ? 'bg-success' : 'bg-accent'
+            percentage === 100 ? 'bg-forest-green' : 'bg-forest-green'
           }`}
           style={{ width: `${percentage}%` }}
         />

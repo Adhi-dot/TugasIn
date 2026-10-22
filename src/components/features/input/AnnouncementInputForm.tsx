@@ -1,5 +1,5 @@
 import React, { useState, useId } from 'react';
-import { SparkleScanIcon, ShieldLockIcon, SpinnerIcon, PlusIcon } from '../../ui/icons';
+import { Sparkles, Plus, Bolt, Lock, AlertCircle } from 'lucide-react';
 import { ExtractionRequest } from '../../../types/extraction';
 
 export interface AnnouncementInputFormProps {
@@ -12,7 +12,7 @@ export interface AnnouncementInputFormProps {
 
 const MAX_CHAR_COUNT = 5000;
 
-export const AnnouncementInputForm: React.FC<AnnouncementInputFormProps> = ({
+export const AnnouncementInputForm: React.FC<Readonly<AnnouncementInputFormProps>> = ({
   onExtract,
   isLoading,
   onManualAdd,
@@ -21,7 +21,7 @@ export const AnnouncementInputForm: React.FC<AnnouncementInputFormProps> = ({
 }) => {
   const [text, setText] = useState<string>(initialText);
   const [sourceMessageDate, setSourceMessageDate] = useState<string>('');
-  const [displayTimezone, setDisplayTimezone] = useState<string>(() => {
+  const [displayTimezone] = useState<string>(() => {
     try {
       return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Jakarta';
     } catch {
@@ -31,7 +31,6 @@ export const AnnouncementInputForm: React.FC<AnnouncementInputFormProps> = ({
 
   const textareaId = useId();
   const dateInputId = useId();
-  const timezoneId = useId();
 
   const trimmedText = text.trim();
   const charCount = text.length;
@@ -50,179 +49,173 @@ export const AnnouncementInputForm: React.FC<AnnouncementInputFormProps> = ({
     });
   };
 
-  const handleApplyTemplate = (sampleText: string) => {
+  const handleApplyTemplate = (sampleText: string, sampleDate?: string) => {
     setText(sampleText);
+    if (sampleDate) {
+      setSourceMessageDate(sampleDate);
+    }
   };
 
   return (
-    <div className={`bg-surface rounded-card border border-hairline p-6 shadow-sm ${className}`}>
-      {/* Template Quick Chips */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <label htmlFor={textareaId} className="text-sm font-semibold text-ink">
-            Tempel Teks Pengumuman Tugas
-          </label>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() =>
-                handleApplyTemplate(
-                  'Untuk mata kuliah UI/UX, buat wireframe aplikasi perpustakaan. Maksimal 3 anggota per kelompok. Kumpulkan PDF pada 21 Oktober 2026 pukul 23.59 WIB melalui LMS.'
-                )
-              }
-              className="text-xs text-brand-700 bg-brand-50 hover:bg-emerald-100 px-2.5 py-1 rounded-full border border-emerald-200 transition-colors"
-            >
-              Contoh 1: UI/UX (Lengkap)
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                handleApplyTemplate(
-                  'Halo teman-teman, tugas Sistem Basis Data dikumpulkan besok ya via LMS. Format PDF.'
-                )
-              }
-              className="text-xs text-slate-600 bg-surface-subtle hover:bg-slate-200 px-2.5 py-1 rounded-full border border-hairline transition-colors"
-            >
-              Contoh 2: Relatif ("Besok")
-            </button>
+    <section
+      id="announcement-extractor-section"
+      aria-label="Panel Ekstraksi Pengumuman Tugas"
+      className={`bg-forest-green rounded-2xl p-6 text-white border border-emerald-900 shadow-sm ${className}`}
+    >
+      <form onSubmit={handleSubmit}>
+        {/* Top bar: Extractor title & AI Model Tag */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-lime-accent text-dark-ink flex items-center justify-center shrink-0 shadow-sm">
+              <Sparkles className="w-5 h-5 text-forest-green" />
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white leading-tight">
+                Tempel Pengumuman Tugas
+              </h2>
+              <p className="text-xs text-on-primary-container mt-0.5">
+                Konversi bahasa pengumuman santai menjadi sub-tugas terstruktur &amp; tenggat pasti
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-950/80 text-lime-accent border border-emerald-700/80 flex items-center gap-1.5 shadow-inner">
+              <span className="w-1.5 h-1.5 rounded-full bg-lime-accent" />
+              Gemini AI Extractor
+            </span>
           </div>
         </div>
 
-        {/* Textarea */}
+        {/* Textarea Input */}
         <div className="relative">
+          <label htmlFor={textareaId} className="sr-only">
+            Teks Pengumuman Tugas Kuliah
+          </label>
           <textarea
             id={textareaId}
             value={text}
             onChange={(e) => setText(e.target.value)}
             disabled={isLoading}
-            rows={5}
-            placeholder="Tempel pengumuman tugas dari WhatsApp, Telegram, Google Classroom, atau LMS kampus di sini..."
-            className={`w-full rounded-input border p-3.5 text-sm text-ink bg-surface placeholder:text-ink-subtle focus:outline-none focus:ring-2 transition-all resize-y min-h-[140px] ${
-              isOverLimit
-                ? 'border-red-500 focus:border-red-500 focus:ring-red-100'
-                : 'border-hairline focus:border-brand-600 focus:ring-emerald-100'
+            rows={4}
+            placeholder="Tempel pengumuman dari WhatsApp grup kelas atau LMS di sini... Contoh: 'Halo rek tugas Desain Antarmuka wireframe app perpustakaan dikumpul Jumat 16 Okt jam 23.59 via LMS format PDF maks 3 orang ya'"
+            className={`w-full rounded-xl border bg-white/10 text-white placeholder-emerald-200/60 p-4 text-sm font-sans focus:outline-none focus:ring-2 focus:ring-lime-accent focus:border-transparent transition resize-y min-h-[120px] ${
+              isOverLimit ? 'border-rose-400 focus:ring-rose-400' : 'border-white/20'
             }`}
           />
         </div>
 
-        {/* Counter & Validation Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-2 mt-2 text-xs">
-          <div className="flex items-center gap-1.5 text-ink-muted">
-            <ShieldLockIcon className="w-3.5 h-3.5 text-brand-600 flex-shrink-0" />
-            <span>Teks pengumuman dikirim ke Gemini untuk diproses.</span>
+        {/* Counter & Privacy Notice */}
+        <div className="flex flex-wrap items-center justify-between gap-2 mt-2 text-xs text-emerald-100/90">
+          <div className="flex items-center gap-1.5">
+            <Lock className="w-3.5 h-3.5 text-lime-accent shrink-0" />
+            <span>Teks pengumuman dikirim aman ke Gemini untuk diproses.</span>
           </div>
 
-          <div
-            className={`font-medium ${
-              isOverLimit
-                ? 'text-red-600'
-                : charCount > 4500
-                ? 'text-amber-600'
-                : 'text-ink-muted'
-            }`}
-          >
+          <div className={isOverLimit ? 'text-rose-300 font-bold' : 'text-emerald-200/80'}>
             {charCount.toLocaleString('id-ID')} / {MAX_CHAR_COUNT.toLocaleString('id-ID')} karakter
           </div>
         </div>
 
         {isOverLimit && (
-          <p className="mt-1.5 text-xs text-red-600">
+          <p className="mt-2 text-xs text-rose-300 flex items-center gap-1">
+            <AlertCircle className="w-3.5 h-3.5" />
             Teks melebihi batas 5.000 karakter. Mohon perpendek pengumuman sebelum memproses.
           </p>
         )}
-      </div>
 
-      {/* Context Parameter Controls (Horizontal Row) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 pb-5 border-t border-hairline">
-        <div>
-          <label htmlFor={dateInputId} className="block text-xs font-medium text-ink-muted mb-1.5">
-            Tanggal Pesan Asal (Opsional)
-          </label>
-          <input
-            id={dateInputId}
-            type="date"
-            value={sourceMessageDate}
-            onChange={(e) => setSourceMessageDate(e.target.value)}
-            disabled={isLoading}
-            className="w-full text-xs rounded-input border border-hairline bg-surface p-2.5 text-ink focus:border-brand-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none"
-            title="Membantu menafsirkan tanggal relatif seperti 'besok' atau 'lusa'"
-          />
-          <span className="block mt-1 text-[11px] text-ink-subtle">
-            Isi jika pengumuman memakai istilah relatif seperti “besok”.
-          </span>
+        {/* Extractor Control Row */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-4 pt-3.5 border-t border-white/15">
+          {/* Date reference input */}
+          <div className="flex items-center gap-2.5">
+            <label htmlFor={dateInputId} className="text-xs text-emerald-100/90 whitespace-nowrap">
+              Tanggal pesan asal (opsional):
+            </label>
+            <div className="relative flex items-center">
+              <input
+                id={dateInputId}
+                type="date"
+                value={sourceMessageDate}
+                onChange={(e) => setSourceMessageDate(e.target.value)}
+                disabled={isLoading}
+                className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-lime-accent w-40 [color-scheme:dark]"
+              />
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-3">
+            {onManualAdd && (
+              <button
+                type="button"
+                onClick={onManualAdd}
+                disabled={isLoading}
+                className="h-11 px-4 rounded-xl border border-white/30 text-white hover:bg-white/10 text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center gap-1.5 active:opacity-90 disabled:opacity-50"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Tambah Manual</span>
+              </button>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSubmitDisabled}
+              className="h-11 px-6 rounded-xl font-bold bg-lime-accent hover:bg-lime-300 text-dark-ink text-xs sm:text-sm flex items-center justify-center gap-2 transition-all duration-150 active:scale-[0.98] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-dark-ink border-t-transparent rounded-full animate-spin" />
+                  <span>Mengekstrak via Gemini...</span>
+                </>
+              ) : (
+                <>
+                  <Bolt className="w-4 h-4 text-forest-green" />
+                  <span>Ambil Tugas via Gemini</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
-        <div>
-          <label htmlFor={timezoneId} className="block text-xs font-medium text-ink-muted mb-1.5">
-            Zona Waktu Tampilan
-          </label>
-          <select
-            id={timezoneId}
-            value={displayTimezone}
-            onChange={(e) => setDisplayTimezone(e.target.value)}
-            disabled={isLoading}
-            className="w-full text-xs rounded-input border border-hairline bg-surface p-2.5 text-ink focus:border-brand-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none"
+        {/* Quick Sample Template Chips */}
+        <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-white/10">
+          <span className="text-xs text-emerald-200/80 font-medium">Coba contoh:</span>
+          <button
+            type="button"
+            onClick={() =>
+              handleApplyTemplate(
+                'Untuk mata kuliah UI/UX, buat wireframe aplikasi perpustakaan. Maksimal 3 anggota per kelompok. Kumpulkan PDF pada 21 Oktober 2026 pukul 23.59 WIB melalui LMS.'
+              )
+            }
+            className="px-3 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-xs text-white transition-colors flex items-center gap-1.5 border border-white/10"
           >
-            <option value="Asia/Jakarta">WIB — Waktu Indonesia Barat (UTC+7)</option>
-            <option value="Asia/Makassar">WITA — Waktu Indonesia Tengah (UTC+8)</option>
-            <option value="Asia/Jayapura">WIT — Waktu Indonesia Timur (UTC+9)</option>
-          </select>
-          <span className="block mt-1 text-[11px] text-ink-subtle">
-            Awalnya mengikuti browser dan dapat dikoreksi.
-          </span>
+            <span>Tugas UI/UX Wireframe</span>
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              handleApplyTemplate(
+                'Halo rek tugas Jaringan Komputer laporan subnetting dikumpul besok ya jam 17.00 di meja dosen format hardcopy.',
+                new Date().toISOString().split('T')[0]
+              )
+            }
+            className="px-3 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-xs text-white transition-colors flex items-center gap-1.5 border border-white/10"
+          >
+            <span>Laporan Jaringan ("Besok")</span>
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              handleApplyTemplate(
+                'Tugas Review Paper Kecerdasan Buatan minimal 5 halaman rangkuman arsitektur transformer, deadline belum ditentukan dosen.'
+              )
+            }
+            className="px-3 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-xs text-white transition-colors flex items-center gap-1.5 border border-white/10"
+          >
+            <span>Review Paper (Tanpa Deadline)</span>
+          </button>
         </div>
-      </div>
-
-      {/* Action Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-hairline">
-        <div className="flex items-center gap-2">
-          {onManualAdd && (
-            <button
-              type="button"
-              onClick={onManualAdd}
-              disabled={isLoading}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-muted hover:text-ink bg-surface border border-hairline hover:bg-slate-50 px-3.5 py-2.5 rounded-input transition-colors disabled:opacity-50"
-            >
-              <PlusIcon className="w-3.5 h-3.5" />
-              <span>Tambah manual</span>
-            </button>
-          )}
-
-          {text && (
-            <button
-              type="button"
-              onClick={() => setText('')}
-              disabled={isLoading}
-              className="text-xs text-ink-subtle hover:text-red-600 px-2.5 py-2 transition-colors disabled:opacity-50"
-            >
-              Hapus teks
-            </button>
-          )}
-        </div>
-
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={isSubmitDisabled}
-          className={`inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-input text-sm font-semibold transition-all shadow-sm ${
-            isSubmitDisabled
-              ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-              : 'bg-brand-600 hover:bg-brand-700 text-white active:scale-[0.98]'
-          }`}
-        >
-          {isLoading ? (
-            <>
-              <SpinnerIcon className="w-4 h-4 text-white animate-spin" />
-              <span>Mengekstrak tugas...</span>
-            </>
-          ) : (
-            <>
-              <SparkleScanIcon className="w-4 h-4 text-white" />
-              <span>Ambil tugas</span>
-            </>
-          )}
-        </button>
-      </div>
-    </div>
+      </form>
+    </section>
   );
 };

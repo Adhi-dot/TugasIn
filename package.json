@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:all": "vitest run && npx tsx src/test/verifyDashboard.ts && npx tsx --test tests/*.test.ts"
+    "test:all": "vitest run && npx tsx src/test/verifyDashboard.ts && npx tsx tests/verifyExtractionLive.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

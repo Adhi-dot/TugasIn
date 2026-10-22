@@ -38,6 +38,7 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+*.pptx
 
 # Temporary files & scratch
 design_base64.txt

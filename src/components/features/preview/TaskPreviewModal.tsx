@@ -1,14 +1,17 @@
 import React, { useState, useId } from 'react';
 import {
-  VerificationShieldIcon,
-  EvidenceQuoteIcon,
-  CalendarAlertIcon,
-  CloseIcon,
-  CopyIcon,
-  PlusIcon,
-  SpinnerIcon,
-  CheckIcon,
-} from '../../ui/icons';
+  Sparkles,
+  MessageSquare,
+  Calendar,
+  Clock,
+  Plus,
+  X,
+  Copy,
+  Check,
+  AlertTriangle,
+  BookmarkCheck,
+  Building,
+} from 'lucide-react';
 import { TaskDraft } from '../../../types/task';
 
 export interface TaskPreviewModalProps {
@@ -23,7 +26,7 @@ export interface TaskPreviewModalProps {
   className?: string;
 }
 
-export const TaskPreviewModal: React.FC<TaskPreviewModalProps> = ({
+export const TaskPreviewModal: React.FC<Readonly<TaskPreviewModalProps>> = ({
   draft: initialDraft,
   sourceText,
   sourceMessageDate,
@@ -40,7 +43,7 @@ export const TaskPreviewModal: React.FC<TaskPreviewModalProps> = ({
   const [description, setDescription] = useState<string>(initialDraft.description || '');
   const [dueDate, setDueDate] = useState<string>(initialDraft.dueDate || '');
   const [dueTime, setDueTime] = useState<string>(initialDraft.dueTime || '');
-  const [sourceTimezone, setSourceTimezone] = useState<string>(initialDraft.sourceTimezone || '');
+  const [sourceTimezone] = useState<string>(initialDraft.sourceTimezone || '');
   const [requirements, setRequirements] = useState<string[]>([...(initialDraft.requirements || [])]);
   const [newRequirement, setNewRequirement] = useState<string>('');
 
@@ -79,7 +82,7 @@ export const TaskPreviewModal: React.FC<TaskPreviewModalProps> = ({
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch {
-      // Fallback diam jika clipboard permission tidak tersedia
+      // Fallback
     }
   };
 
@@ -146,130 +149,140 @@ export const TaskPreviewModal: React.FC<TaskPreviewModalProps> = ({
   };
 
   return (
-    <div className={`fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 ${className}`}>
-      <div 
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="preview-modal-title"
-        className="bg-surface rounded-card border border-hairline shadow-2xl w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-      >
-        {/* Header Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-hairline bg-surface flex-shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-brand-50 border border-emerald-200 flex items-center justify-center text-brand-600">
-              <VerificationShieldIcon className="w-5 h-5" />
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="preview-modal-title"
+      className={`fixed inset-0 z-50 bg-dark-ink/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto ${className}`}
+    >
+      <div className="relative w-full max-w-5xl bg-surface-container-lowest rounded-2xl border border-outline-variant/40 flex flex-col max-h-[92vh] overflow-hidden shadow-2xl my-auto animate-in fade-in zoom-in-95 duration-150">
+        {/* 1. Modal Header Bar */}
+        <div className="px-6 py-4 border-b border-outline-variant/30 flex items-start justify-between bg-surface-container-low shrink-0">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-lime-accent text-dark-ink text-xs font-bold border border-secondary/20 shadow-sm">
+                <Sparkles className="w-3.5 h-3.5 text-forest-green" />
+                Hasil Ekstraksi Gemini AI
+              </span>
+              <span className="text-xs text-on-surface-variant hidden sm:flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-secondary" />
+                Model: Gemini AI Extractor
+              </span>
             </div>
-            <div>
-              <h2 id="preview-modal-title" className="text-base font-bold text-ink">
-                Periksa & Koreksi Hasil Ekstraksi
-              </h2>
-              <p className="text-xs text-ink-muted">
-                Bandingkan teks asli pengumuman dengan draft tugas terstruktur sebelum disimpan.
-              </p>
-            </div>
+            <h2 id="preview-modal-title" className="text-lg sm:text-xl font-bold text-forest-green tracking-tight">
+              Periksa &amp; Koreksi Detail Tugas
+            </h2>
+            <p className="text-xs text-on-surface-variant">
+              Bandingkan teks pengumuman asli dengan field yang diekstrak oleh Gemini API sebelum disimpan ke dashboard.
+            </p>
           </div>
 
+          {/* Close Button */}
           <button
             type="button"
             onClick={onCancel}
             disabled={isSaving}
-            className="text-ink-subtle hover:text-ink p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+            className="rounded-lg p-2 text-on-surface-variant hover:text-dark-ink hover:bg-surface-container-high transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-forest-green"
             aria-label="Tutup dan batal"
           >
-            <CloseIcon className="w-5 h-5" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Content Body: Dual Pane Side-by-Side (Scrollable) */}
-        <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 bg-canvas">
-          {/* SISI KIRI (40% - 5 Kolom): Teks Sumber Asli Pengumuman */}
-          <div className="lg:col-span-5 flex flex-col gap-4">
-            <div className="bg-surface-subtle rounded-xl border border-hairline p-4 flex-1 flex flex-col shadow-sm">
-              <div className="flex items-center justify-between mb-3 pb-2 border-b border-hairline">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-ink">
-                  <EvidenceQuoteIcon className="w-4 h-4 text-slate-500" />
-                  <span>Pengumuman Asli</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleCopySourceText}
-                  className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 hover:text-ink bg-white px-2 py-1 rounded border border-hairline transition-colors"
-                >
-                  {copySuccess ? (
-                    <>
-                      <CheckIcon className="w-3 h-3 text-brand-600" />
-                      <span>Tersalin</span>
-                    </>
-                  ) : (
-                    <>
-                      <CopyIcon className="w-3 h-3" />
-                      <span>Salin teks</span>
-                    </>
-                  )}
-                </button>
-              </div>
+        {/* 2. Modal Body: Two-Column Comparison View */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 bg-ivory-bg">
+          {/* SISI KIRI (5 Kolom): Teks Sumber Asli Pengumuman */}
+          <div className="lg:col-span-5 flex flex-col bg-surface-container-low rounded-xl border border-outline-variant/40 p-4 sm:p-5 shadow-sm">
+            <div className="flex items-center justify-between pb-3 border-b border-outline-variant/30 mb-3">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container-lowest text-dark-ink text-xs font-bold border border-outline-variant/30">
+                <MessageSquare className="w-3.5 h-3.5 text-forest-green" />
+                Teks Pengumuman Asal
+              </span>
 
-              {/* Render Teks Pengumuman Aman Anti-XSS */}
-              <div className="text-xs text-slate-700 whitespace-pre-wrap font-sans leading-relaxed flex-1 bg-white p-3 rounded-lg border border-hairline overflow-y-auto max-h-[300px] lg:max-h-[460px]">
-                {sourceText}
-              </div>
-
-              {/* Bukti Kutipan AI */}
-              {criticalFieldEvidence && Object.keys(criticalFieldEvidence).length > 0 && (
-                <div className="mt-3 pt-3 border-t border-hairline">
-                  <span className="text-[11px] font-semibold text-ink-muted block mb-1.5">
-                    Bukti Kutipan Entitas dari Teks:
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {Object.entries(criticalFieldEvidence).map(([key, val]) => (
-                      <span
-                        key={key}
-                        className="text-[11px] bg-white border border-emerald-200 text-brand-700 px-2 py-0.5 rounded-full truncate max-w-full"
-                        title={`${key}: ${val}`}
-                      >
-                        <strong className="capitalize">{key}:</strong> "{val}"
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <button
+                type="button"
+                onClick={handleCopySourceText}
+                className="inline-flex items-center gap-1 text-xs font-medium text-dark-ink hover:bg-surface-container-lowest px-2 py-1 rounded border border-outline-variant/30 transition-colors"
+                title="Salin teks sumber"
+              >
+                {copySuccess ? (
+                  <>
+                    <Check className="w-3 h-3 text-forest-green" />
+                    <span>Tersalin</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3 h-3 text-outline" />
+                    <span>Salin</span>
+                  </>
+                )}
+              </button>
             </div>
 
-            {/* Context Info Box */}
-            <div className="text-[11px] text-ink-subtle bg-surface p-3 rounded-lg border border-hairline space-y-1">
-              <div>• Zona Tampilan Aktif: <strong className="text-ink-muted">{displayTimezone}</strong></div>
+            {/* Render Teks Pengumuman Aman */}
+            <div className="text-xs text-dark-ink whitespace-pre-wrap font-sans leading-relaxed flex-1 bg-surface-container-lowest p-3.5 rounded-lg border border-outline-variant/30 overflow-y-auto max-h-[260px] lg:max-h-[380px] shadow-inner">
+              {sourceText}
+            </div>
+
+            {/* Bukti Kutipan Entitas dari Teks */}
+            {criticalFieldEvidence && Object.keys(criticalFieldEvidence).length > 0 && (
+              <div className="mt-3 pt-3 border-t border-outline-variant/30">
+                <span className="text-[11px] font-bold text-outline block mb-1.5">
+                  Bukti Kutipan Entitas dari Teks:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {Object.entries(criticalFieldEvidence).map(([key, val]) => (
+                    <span
+                      key={key}
+                      className="text-[11px] bg-surface-container-lowest border border-outline-variant/40 text-dark-ink px-2 py-0.5 rounded-md truncate max-w-full font-medium"
+                      title={`${key}: ${val}`}
+                    >
+                      <strong className="capitalize text-forest-green">{key}:</strong> "{val}"
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Metadata Footer */}
+            <div className="mt-3 text-[11px] text-outline bg-surface-container-lowest/80 p-2.5 rounded-lg border border-outline-variant/30 space-y-0.5">
+              <div>• Zona Tampilan Aktif: <strong className="text-dark-ink">{displayTimezone}</strong></div>
               {sourceMessageDate && (
-                <div>• Acuan Tanggal Pesan Asal: <strong className="text-ink-muted">{sourceMessageDate}</strong></div>
+                <div>• Acuan Tanggal Pesan Asal: <strong className="text-dark-ink">{sourceMessageDate}</strong></div>
               )}
             </div>
           </div>
 
-          {/* SISI KANAN (60% - 7 Kolom): Formulir Koreksi Draft */}
-          <div className="lg:col-span-7 bg-surface rounded-xl border border-hairline p-5 shadow-sm space-y-4">
+          {/* SISI KANAN (7 Kolom): Formulir Koreksi Draft */}
+          <div className="lg:col-span-7 bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-4 sm:p-5 shadow-sm space-y-4">
             {/* Warning Banner Ekstraksi jika ada */}
             {(warnings.length > 0 || initialDraft.isAmbiguousDeadline) && (
-              <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-lg p-3 text-xs space-y-1">
-                <div className="flex items-center gap-1.5 font-semibold text-amber-800">
-                  <CalendarAlertIcon className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                  <span>Perhatian: Perlu Dilengkapi / Dikonfirmasi</span>
+              <div className="bg-amber-50 border border-amber-200/80 rounded-xl p-3.5 text-xs text-amber-900 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-amber-950">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>Catatan Pemeriksaan AI:</span>
                 </div>
-                {initialDraft.ambiguityReason && (
-                  <p className="text-amber-700">{initialDraft.ambiguityReason}</p>
-                )}
-                {warnings.map((w, idx) => (
-                  <p key={idx} className="text-amber-700">• {w}</p>
-                ))}
+                <ul className="list-disc list-inside space-y-0.5 text-amber-900/90 pl-1">
+                  {initialDraft.isAmbiguousDeadline && (
+                    <li>
+                      Tenggat ambigu: {initialDraft.ambiguityReason || 'Informasi tanggal/waktu pada pengumuman belum lengkap.'} Silakan lengkapi atau hapus tanggal.
+                    </li>
+                  )}
+                  {warnings.map((w, idx) => (
+                    <li key={idx}>{w}</li>
+                  ))}
+                </ul>
               </div>
             )}
 
             {/* Field 1: Judul Tugas (Wajib) */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label htmlFor={titleInputId} className="text-xs font-semibold text-ink">
-                  Judul Tugas <span className="text-red-500">*</span>
+                <label htmlFor={titleInputId} className="text-xs font-bold text-dark-ink flex items-center gap-1">
+                  Judul Tugas <span className="text-rose-600">*</span>
                 </label>
-                <span className={`text-[11px] ${title.length > 150 ? 'text-red-600 font-bold' : 'text-ink-subtle'}`}>
-                  {title.length} / 150
+                <span className={`text-[11px] ${title.length > 150 ? 'text-rose-600 font-bold' : 'text-outline'}`}>
+                  {title.length}/150
                 </span>
               </div>
               <input
@@ -281,25 +294,28 @@ export const TaskPreviewModal: React.FC<TaskPreviewModalProps> = ({
                   if (titleError) setTitleError(null);
                 }}
                 disabled={isSaving}
-                placeholder="Contoh: Desain Wireframe Aplikasi Perpustakaan"
-                className={`w-full text-xs rounded-input border p-2.5 text-ink bg-surface focus:outline-none focus:ring-2 ${
-                  titleError
-                    ? 'border-red-500 focus:border-red-500 focus:ring-red-100'
-                    : 'border-hairline focus:border-brand-600 focus:ring-emerald-100'
+                className={`w-full text-xs sm:text-sm rounded-lg border bg-surface-container-lowest p-2.5 text-dark-ink focus:outline-none focus:ring-2 focus:ring-forest-green transition-all ${
+                  titleError ? 'border-rose-400 focus:ring-rose-400' : 'border-outline-variant/50'
                 }`}
+                placeholder="Contoh: Wireframe UI/UX Aplikasi Perpustakaan"
               />
               {titleError && (
-                <p className="mt-1 text-xs text-red-600">{titleError}</p>
+                <p className="mt-1 text-xs text-rose-600 font-medium">{titleError}</p>
               )}
             </div>
 
-            {/* Field 2: Mata Kuliah (Opsional) */}
+            {/* Field 2: Mata Kuliah */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label htmlFor={courseInputId} className="text-xs font-semibold text-ink">
-                  Mata Kuliah <span className="text-ink-subtle font-normal">(Opsional)</span>
+                <label htmlFor={courseInputId} className="text-xs font-bold text-dark-ink flex items-center gap-1">
+                  <Building className="w-3.5 h-3.5 text-forest-green" />
+                  Mata Kuliah
                 </label>
-                <span className="text-[11px] text-ink-subtle">{course.length} / 100</span>
+                {!course && (
+                  <span className="text-[11px] font-semibold text-outline bg-surface-container-low px-2 py-0.5 rounded">
+                    Perlu dilengkapi (Opsional)
+                  </span>
+                )}
               </div>
               <input
                 id={courseInputId}
@@ -307,213 +323,179 @@ export const TaskPreviewModal: React.FC<TaskPreviewModalProps> = ({
                 value={course}
                 onChange={(e) => setCourse(e.target.value)}
                 disabled={isSaving}
-                placeholder="Contoh: UI/UX Design"
-                className="w-full text-xs rounded-input border border-hairline p-2.5 text-ink bg-surface focus:border-brand-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none"
+                className="w-full text-xs sm:text-sm rounded-lg border border-outline-variant/50 bg-surface-container-lowest p-2.5 text-dark-ink focus:outline-none focus:ring-2 focus:ring-forest-green transition-all"
+                placeholder="Contoh: Desain Antarmuka &amp; Pengalaman Pengguna"
               />
             </div>
 
-            {/* Field 3: Deadline (Tanggal & Waktu) */}
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label htmlFor={dateInputId} className="text-xs font-semibold text-ink">
-                  Batas Pengumpulan (Deadline)
-                </label>
-                {!dueDate && (
-                  <span className="text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                    Belum ada deadline
-                  </span>
-                )}
+            {/* Field 3: Tenggat Waktu (Tanggal, Jam, Zona) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor={dateInputId} className="text-xs font-bold text-dark-ink flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-forest-green" />
+                    Tanggal Tenggat
+                  </label>
+                  {!dueDate && (
+                    <span className="text-[11px] font-semibold text-outline bg-surface-container-low px-1.5 py-0.5 rounded">
+                      Belum ada
+                    </span>
+                  )}
+                </div>
+                <input
+                  id={dateInputId}
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => {
+                    setDueDate(e.target.value);
+                    if (dateError) setDateError(null);
+                  }}
+                  disabled={isSaving}
+                  className={`w-full text-xs sm:text-sm rounded-lg border bg-surface-container-lowest p-2.5 text-dark-ink focus:outline-none focus:ring-2 focus:ring-forest-green transition-all ${
+                    dateError ? 'border-rose-400 focus:ring-rose-400' : 'border-outline-variant/50'
+                  }`}
+                />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor={dateInputId} className="block text-[11px] text-ink-muted mb-1">
-                    Tanggal Pengumpulan
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor={timeInputId} className="text-xs font-bold text-dark-ink flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-forest-green" />
+                    Waktu (Jam)
                   </label>
-                  <input
-                    id={dateInputId}
-                    type="date"
-                    value={dueDate}
-                    onChange={(e) => {
-                      setDueDate(e.target.value);
-                      if (dateError) setDateError(null);
-                    }}
-                    disabled={isSaving}
-                    className="w-full text-xs rounded-input border border-hairline p-2 text-ink bg-surface focus:border-brand-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none"
-                  />
+                  {!dueTime && dueDate && (
+                    <span className="text-[11px] text-outline">Tidak disebutkan</span>
+                  )}
                 </div>
-
-                <div>
-                  <label htmlFor={timeInputId} className="block text-[11px] text-ink-muted mb-1">
-                    Jam Pengumpulan
-                  </label>
-                  <input
-                    id={timeInputId}
-                    type="time"
-                    value={dueTime}
-                    onChange={(e) => {
-                      setDueTime(e.target.value);
-                      if (dateError) setDateError(null);
-                    }}
-                    disabled={isSaving || !dueDate}
-                    className={`w-full text-xs rounded-input border p-2 text-ink bg-surface focus:outline-none focus:ring-2 ${
-                      !dueDate
-                        ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
-                        : 'border-hairline focus:border-brand-600 focus:ring-emerald-100'
-                    }`}
-                  />
-                </div>
-              </div>
-
-              {/* Status helper deadline */}
-              <div className="mt-1.5 flex flex-wrap gap-2 text-[11px]">
-                {dueDate && !dueTime && (
-                  <span className="text-slate-500 italic">
-                    Batas tanggal {dueDate} · Jam tidak disebutkan
-                  </span>
-                )}
-                {!dueDate && (
-                  <span className="text-amber-600">
-                    * Tugas tanpa deadline tetap dapat disimpan.
-                  </span>
-                )}
-                {dateError && (
-                  <span className="text-red-600 font-medium block w-full">{dateError}</span>
-                )}
+                <input
+                  id={timeInputId}
+                  type="time"
+                  value={dueTime}
+                  onChange={(e) => {
+                    setDueTime(e.target.value);
+                    if (dateError) setDateError(null);
+                  }}
+                  disabled={isSaving || !dueDate}
+                  className={`w-full text-xs sm:text-sm rounded-lg border bg-surface-container-lowest p-2.5 text-dark-ink focus:outline-none focus:ring-2 focus:ring-forest-green transition-all ${
+                    !dueDate ? 'opacity-50 cursor-not-allowed bg-surface-container-low' : 'border-outline-variant/50'
+                  }`}
+                />
               </div>
             </div>
 
-            {/* Field 4: Zona Waktu Sumber */}
-            <div>
-              <label className="block text-xs font-semibold text-ink mb-1">
-                Zona Waktu Pengumpulan
-              </label>
-              <input
-                type="text"
-                value={sourceTimezone}
-                onChange={(e) => setSourceTimezone(e.target.value)}
-                disabled={isSaving}
-                placeholder="Contoh: WIB (UTC+7)"
-                className="w-full text-xs rounded-input border border-hairline p-2.5 text-ink bg-surface focus:border-brand-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none"
-              />
-              <span className="block mt-1 text-[11px] text-ink-subtle">
-                Zona waktu yang tertera pada pengumuman.
-              </span>
-            </div>
+            {dateError && (
+              <p className="text-xs text-rose-600 font-medium">{dateError}</p>
+            )}
 
-            {/* Field 5: Deskripsi Singkat */}
+            {/* Field 4: Deskripsi / Ringkasan Tugas */}
             <div>
-              <label htmlFor={descriptionId} className="block text-xs font-semibold text-ink mb-1">
-                Deskripsi / Catatan Tugas
+              <label htmlFor={descriptionId} className="block text-xs font-bold text-dark-ink mb-1">
+                Deskripsi / Ringkasan Instruksi
               </label>
               <textarea
                 id={descriptionId}
+                rows={2}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 disabled={isSaving}
-                rows={2}
-                placeholder="Ringkasan instruksi atau catatan khusus tugas..."
-                className="w-full text-xs rounded-input border border-hairline p-2.5 text-ink bg-surface focus:border-brand-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none"
+                className="w-full text-xs sm:text-sm rounded-lg border border-outline-variant/50 bg-surface-container-lowest p-2.5 text-dark-ink focus:outline-none focus:ring-2 focus:ring-forest-green transition-all resize-y"
+                placeholder="Rincian petunjuk pengerjaan tugas dari dosen..."
               />
             </div>
 
-            {/* Field 6: Ketentuan Tugas dari Pengumuman */}
+            {/* Field 5: Ketentuan dari Pengumuman */}
             <div>
-              <label className="block text-xs font-semibold text-ink mb-1">
-                Ketentuan dari Pengumuman
-              </label>
-              <p className="text-[11px] text-ink-subtle mb-2">
-                Format, batasan kelompok, dan media pengumpulan yang diekstrak langsung dari sumber.
-              </p>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-dark-ink flex items-center gap-1">
+                  <BookmarkCheck className="w-3.5 h-3.5 text-forest-green" />
+                  Ketentuan Khusus ({requirements.length})
+                </label>
+              </div>
 
-              {/* Chip List Ketentuan */}
+              {/* Requirement Chips */}
               <div className="flex flex-wrap gap-1.5 mb-2.5">
-                {requirements.map((req, index) => (
+                {requirements.map((req, idx) => (
                   <span
-                    key={index}
-                    className="inline-flex items-center gap-1.5 bg-brand-50 border border-emerald-200 text-brand-700 text-xs px-2.5 py-1 rounded-full"
+                    key={idx}
+                    className="inline-flex items-center gap-1 bg-surface-container-low border border-outline-variant/40 text-dark-ink text-xs px-2.5 py-1 rounded-lg font-medium"
                   >
                     <span>{req}</span>
                     <button
                       type="button"
-                      onClick={() => handleRemoveRequirement(index)}
+                      onClick={() => handleRemoveRequirement(idx)}
                       disabled={isSaving}
-                      className="text-brand-600 hover:text-red-600 p-0.5 rounded-full"
+                      className="text-outline hover:text-rose-600 ml-0.5 p-0.5 rounded transition-colors"
                       title="Hapus ketentuan"
                     >
-                      <CloseIcon className="w-3 h-3" />
+                      <X className="w-3 h-3" />
                     </button>
                   </span>
                 ))}
                 {requirements.length === 0 && (
-                  <span className="text-xs text-ink-subtle italic">Belum ada ketentuan penugasan khusus.</span>
+                  <span className="text-xs text-outline italic">
+                    Belum ada ketentuan eksplisit yang terdeteksi.
+                  </span>
                 )}
               </div>
 
-              {/* Form Input Tambah Ketentuan */}
+              {/* Add Requirement Input */}
               <form onSubmit={handleAddRequirement} className="flex gap-2">
                 <input
                   type="text"
                   value={newRequirement}
                   onChange={(e) => setNewRequirement(e.target.value)}
                   disabled={isSaving}
-                  placeholder="Tambah ketentuan baru (misal: Maks 10 MB)..."
-                  className="flex-1 text-xs rounded-input border border-hairline p-2 text-ink bg-surface focus:border-brand-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none"
+                  placeholder="Tambah ketentuan baru (cth: Format PDF maks 10MB)..."
+                  className="flex-1 text-xs rounded-lg border border-outline-variant/40 bg-surface-container-lowest px-3 py-1.5 text-dark-ink focus:outline-none focus:ring-2 focus:ring-forest-green"
                 />
                 <button
                   type="submit"
                   disabled={isSaving || !newRequirement.trim()}
-                  className="inline-flex items-center gap-1 text-xs font-medium bg-surface border border-hairline hover:bg-slate-50 text-ink px-3 py-2 rounded-input transition-colors disabled:opacity-50"
+                  className="px-3 py-1.5 bg-surface-container-low hover:bg-surface-container-high text-dark-ink font-semibold text-xs rounded-lg border border-outline-variant/40 transition-colors disabled:opacity-50"
                 >
-                  <PlusIcon className="w-3.5 h-3.5" />
-                  <span>Tambah</span>
+                  <Plus className="w-3.5 h-3.5 inline mr-1" />
+                  Tambah
                 </button>
               </form>
             </div>
+
+            {saveErrorMessage && (
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-700">
+                {saveErrorMessage}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Sticky Bottom Action Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-t border-hairline bg-surface flex-shrink-0">
-          <div className="text-xs text-ink-muted">
-            {saveErrorMessage ? (
-              <span className="text-red-600 font-medium">{saveErrorMessage}</span>
+        {/* 3. Modal Footer Bar */}
+        <div className="px-6 py-4 bg-surface-container-low border-t border-outline-variant/30 flex items-center justify-between shrink-0">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isSaving}
+            className="h-11 px-5 rounded-xl border border-outline-variant/60 bg-surface-container-lowest hover:bg-surface-container-high text-dark-ink text-xs sm:text-sm font-semibold transition-colors"
+          >
+            Batal / Hapus Draft
+          </button>
+
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={isSaving}
+            className="h-11 px-6 rounded-xl font-bold bg-forest-green hover:bg-[#193e31] text-white text-xs sm:text-sm flex items-center justify-center gap-2 transition-all duration-150 active:scale-[0.98] shadow-sm disabled:opacity-50"
+          >
+            {isSaving ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Menyimpan ke Dashboard...</span>
+              </>
             ) : (
-              <span>Satu aksi simpan menghasilkan tepat satu kartu tugas.</span>
+              <>
+                <Check className="w-4 h-4 text-lime-accent" />
+                <span>Simpan ke Dashboard</span>
+              </>
             )}
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={onCancel}
-              disabled={isSaving}
-              className="px-4 py-2 text-xs font-medium text-ink-muted hover:text-ink bg-surface border border-hairline hover:bg-slate-50 rounded-input transition-colors disabled:opacity-50"
-            >
-              Batal
-            </button>
-
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={isSaving}
-              className={`inline-flex items-center justify-center gap-2 px-6 py-2 text-xs font-semibold rounded-input text-white transition-all shadow-sm ${
-                isSaving ? 'bg-emerald-400 cursor-not-allowed' : 'bg-brand-600 hover:bg-brand-700 active:scale-[0.98]'
-              }`}
-            >
-              {isSaving ? (
-                <>
-                  <SpinnerIcon className="w-3.5 h-3.5 text-white animate-spin" />
-                  <span>Menyimpan tugas...</span>
-                </>
-              ) : (
-                <>
-                  <CheckIcon className="w-3.5 h-3.5 text-white" />
-                  <span>Simpan tugas</span>
-                </>
-              )}
-            </button>
-          </div>
+          </button>
         </div>
       </div>
     </div>

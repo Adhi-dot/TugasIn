@@ -3,7 +3,7 @@ import { Search, Globe } from 'lucide-react';
 import { TaskFilter, DashboardSummary } from '../../types/task';
 import { resolveIanaTimezone, getTimezoneDisplayLabel } from '../../lib/deadline';
 
-interface StatusFilterProps {
+export interface StatusFilterProps {
   currentFilter: TaskFilter;
   onFilterChange: (filter: TaskFilter) => void;
   summary: DashboardSummary;
@@ -12,7 +12,7 @@ interface StatusFilterProps {
   timezoneLabel?: string;
 }
 
-export const StatusFilter: React.FC<StatusFilterProps> = ({
+export const StatusFilter: React.FC<Readonly<StatusFilterProps>> = ({
   currentFilter,
   onFilterChange,
   summary,
@@ -23,74 +23,75 @@ export const StatusFilter: React.FC<StatusFilterProps> = ({
   const activeTz = resolveIanaTimezone(null);
   const resolvedLabel = timezoneLabel || `${getTimezoneDisplayLabel(activeTz)} (${activeTz})`;
   const filterTabs: Array<{ id: TaskFilter; label: string; count: number }> = [
-    { id: 'all', label: 'Semua', count: summary.totalCount },
-    { id: 'not_started', label: 'Belum mulai', count: summary.notStartedCount },
+    { id: 'all', label: 'Semua Tugas', count: summary.totalCount },
+    { id: 'not_started', label: 'Belum Mulai', count: summary.notStartedCount },
     { id: 'in_progress', label: 'Dikerjakan', count: summary.inProgressCount },
     { id: 'done', label: 'Selesai', count: summary.doneCount },
   ];
 
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-2">
-      {/* Segmented Filter Pills */}
-      <div
-        role="tablist"
-        aria-label="Filter status tugas"
-        className="inline-flex items-center p-1 bg-slate-100 rounded-lg border border-border overflow-x-auto max-w-full"
-      >
-        {filterTabs.map((tab) => {
-          const isActive = currentFilter === tab.id;
-          return (
-            <button
-              key={tab.id}
-              role="tab"
-              aria-selected={isActive}
-              aria-controls="task-list-panel"
-              id={`filter-tab-${tab.id}`}
-              type="button"
-              onClick={() => onFilterChange(tab.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
-                isActive
-                  ? 'bg-white text-ink-primary shadow-sm font-semibold'
-                  : 'text-ink-secondary hover:text-ink-primary hover:bg-slate-200/50'
-              }`}
-            >
-              <span>{tab.label}</span>
-              <span
-                className={`text-[11px] px-1.5 py-0.2 rounded-full font-semibold ${
-                  isActive
-                    ? 'bg-indigo-50 text-brand-primary'
-                    : 'bg-slate-200 text-ink-secondary'
-                }`}
-              >
-                {tab.count}
-              </span>
-            </button>
-          );
-        })}
+    <div className="bg-surface-container-lowest rounded-xl p-3 border border-outline-variant/40 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
+      {/* Search Bar */}
+      <div className="relative w-full md:w-72">
+        <label htmlFor="task-search-input" className="sr-only">
+          Cari judul tugas atau mata kuliah
+        </label>
+        <Search className="w-4 h-4 text-outline absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <input
+          id="task-search-input"
+          type="text"
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Cari judul atau mata kuliah..."
+          className="w-full bg-surface-container-low border border-outline-variant/30 rounded-lg pl-9 pr-3 py-1.5 text-xs sm:text-sm text-dark-ink placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-forest-green transition-all"
+        />
       </div>
 
-      {/* Search Input & Timezone Badge */}
-      <div className="flex items-center gap-2.5">
-        <div className="relative flex-1 sm:w-64">
-          <label htmlFor="task-search-input" className="sr-only">
-            Cari judul tugas atau mata kuliah
-          </label>
-          <Search className="w-4 h-4 text-ink-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            id="task-search-input"
-            type="text"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Cari tugas / mata kuliah..."
-            className="w-full text-xs sm:text-sm pl-9 pr-3 py-1.5 bg-white border border-border rounded-lg text-ink-primary placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
-          />
+      {/* Segmented Tabs & Timezone */}
+      <div className="flex flex-wrap items-center justify-between md:justify-end gap-2 w-full md:w-auto">
+        <div
+          role="tablist"
+          aria-label="Filter status tugas"
+          className="flex items-center gap-1 bg-surface-container-low p-1 rounded-lg border border-outline-variant/30 overflow-x-auto max-w-full"
+        >
+          {filterTabs.map((tab) => {
+            const isActive = currentFilter === tab.id;
+            return (
+              <button
+                key={tab.id}
+                role="tab"
+                aria-selected={isActive}
+                aria-controls="task-list-panel"
+                id={`filter-tab-${tab.id}`}
+                type="button"
+                onClick={() => onFilterChange(tab.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-green ${
+                  isActive
+                    ? 'bg-surface-container-lowest text-forest-green shadow-none font-bold'
+                    : 'text-on-surface-variant hover:text-dark-ink hover:bg-surface-container-highest/60 font-medium'
+                }`}
+              >
+                <span>{tab.label}</span>
+                <span
+                  className={`text-[11px] px-1.5 py-0.2 rounded-full font-bold ${
+                    isActive
+                      ? 'bg-lime-accent text-dark-ink'
+                      : 'bg-surface-container-high text-on-surface-variant'
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
+        {/* Timezone pill */}
         <div
-          title={`Zona waktu kalkulasi deadline: ${resolvedLabel}`}
-          className="hidden sm:flex items-center gap-1 text-[11px] font-medium text-ink-muted bg-slate-100 border border-border px-2.5 py-1.5 rounded-lg shrink-0"
+          title={`Zona waktu: ${resolvedLabel}`}
+          className="hidden xl:flex items-center gap-1.5 text-xs text-outline bg-surface-container-low px-2.5 py-1.5 rounded-lg border border-outline-variant/30"
         >
-          <Globe className="w-3.5 h-3.5 text-ink-secondary" />
+          <Globe className="w-3.5 h-3.5 text-secondary" />
           <span>{resolvedLabel}</span>
         </div>
       </div>

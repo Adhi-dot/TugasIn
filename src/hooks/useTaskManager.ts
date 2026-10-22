@@ -86,6 +86,13 @@ export function useTaskManager(): UseTaskManagerReturn {
   const persistAndSet = useCallback(
     async (updater: (prev: Task[]) => Task[]): Promise<boolean> => {
       if (isSaving) return false;
+
+      // PRD US-06 Guard: Jangan menimpa data mentah jika penyimpanan masih dalam status rusak
+      if (isCorrupted) {
+        setStorageError('Penyimpanan browser terdeteksi rusak. Harap konfirmasi Reset Penyimpanan terlebih dahulu sebelum menyimpan data baru agar data mentah tidak tertimpa.');
+        return false;
+      }
+
       setIsSaving(true);
 
       const nextTasks = updater(tasks);
@@ -109,7 +116,7 @@ export function useTaskManager(): UseTaskManagerReturn {
       setIsSaving(false);
       return true;
     },
-    [isDemoMode, isSaving, tasks]
+    [isCorrupted, isDemoMode, isSaving, tasks]
   );
 
   /**

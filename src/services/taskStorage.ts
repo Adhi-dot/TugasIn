@@ -12,7 +12,7 @@
  */
 
 import { Task, TaskStatus } from '../types/task';
-import { ChecklistItemData, ChecklistOrigin } from '../types/checklist';
+import { ChecklistItemData } from '../types/checklist';
 import { resolveIanaTimezone } from '../lib/deadline';
 
 export const STORAGE_KEY = 'tugasin_tasks';
@@ -35,15 +35,12 @@ export interface StorageSaveResult {
 function isValidChecklistItem(item: unknown): item is ChecklistItemData {
   if (!item || typeof item !== 'object') return false;
   const candidate = item as Record<string, unknown>;
-  const validOrigin: ChecklistOrigin[] = ['ai', 'manual'];
 
-  return (
-    typeof candidate.id === 'string' &&
-    candidate.id.trim().length > 0 &&
-    typeof candidate.text === 'string' &&
-    typeof candidate.completed === 'boolean' &&
-    validOrigin.includes(candidate.origin as ChecklistOrigin)
-  );
+  const hasId = typeof candidate.id === 'string' && candidate.id.trim().length > 0;
+  const hasText = typeof candidate.text === 'string';
+  const hasCompleted = typeof candidate.completed === 'boolean';
+
+  return hasId && hasText && hasCompleted;
 }
 
 /**
@@ -67,16 +64,18 @@ export function isValidTask(obj: unknown): obj is Task {
     return false;
   }
 
-  // Course: optional string <= 100 or null
+  // Course: optional string <= 100 or null/undefined
   if (candidate.course !== null && candidate.course !== undefined) {
     if (typeof candidate.course !== 'string' || candidate.course.length > 100) {
       return false;
     }
   }
 
-  // Description: string
-  if (typeof candidate.description !== 'string') {
-    return false;
+  // Description: optional string
+  if (candidate.description !== null && candidate.description !== undefined) {
+    if (typeof candidate.description !== 'string') {
+      return false;
+    }
   }
 
   // Status: must be one of 'not_started' | 'in_progress' | 'done'
@@ -85,22 +84,26 @@ export function isValidTask(obj: unknown): obj is Task {
     return false;
   }
 
-  // Checklist: must be array of valid checklist items
-  if (!Array.isArray(candidate.checklist)) {
-    return false;
-  }
-  for (const item of candidate.checklist) {
-    if (!isValidChecklistItem(item)) {
+  // Checklist: optional array of valid checklist items
+  if (candidate.checklist !== null && candidate.checklist !== undefined) {
+    if (!Array.isArray(candidate.checklist)) {
       return false;
+    }
+    for (const item of candidate.checklist) {
+      if (!isValidChecklistItem(item)) {
+        return false;
+      }
     }
   }
 
-  // Requirements: must be array of strings
-  if (!Array.isArray(candidate.requirements)) {
-    return false;
-  }
-  for (const req of candidate.requirements) {
-    if (typeof req !== 'string') return false;
+  // Requirements: optional array of strings
+  if (candidate.requirements !== null && candidate.requirements !== undefined) {
+    if (!Array.isArray(candidate.requirements)) {
+      return false;
+    }
+    for (const req of candidate.requirements) {
+      if (typeof req !== 'string') return false;
+    }
   }
 
   // Date constraints: dueTime without dueDate is invalid
@@ -147,11 +150,11 @@ export function normalizeTask(candidate: Record<string, unknown>): Task {
       : [],
     status: (candidate.status as TaskStatus) || 'not_started',
     checklist: Array.isArray(candidate.checklist)
-      ? (candidate.checklist as ChecklistItemData[]).map(item => ({
+      ? (candidate.checklist as Record<string, unknown>[]).map(item => ({
           id: String(item.id),
           text: String(item.text),
           completed: Boolean(item.completed),
-          origin: (item.origin === 'ai' ? 'ai' : 'manual') as ChecklistOrigin,
+          origin: item.origin === 'ai' ? 'ai' : 'manual',
         }))
       : [],
     createdAt: typeof candidate.createdAt === 'string' ? candidate.createdAt : new Date().toISOString(),

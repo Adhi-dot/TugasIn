@@ -26,6 +26,41 @@ import { handleGenerateChecklist } from './api/generateChecklist';
  * 2. npx tsx src/server/prodServer.ts (atau node server.js setelah tsc)
  */
 
+function loadEnvironment(): void {
+  const envCandidates = ['.env.production', '.env.local', '.env'];
+  for (const filename of envCandidates) {
+    const fullPath = path.resolve(process.cwd(), filename);
+    if (fs.existsSync(fullPath)) {
+      try {
+        const content = fs.readFileSync(fullPath, 'utf-8');
+        content.split(/\r?\n/).forEach((line) => {
+          const trimmed = line.trim();
+          if (trimmed && !trimmed.startsWith('#')) {
+            const eqIndex = trimmed.indexOf('=');
+            if (eqIndex > 0) {
+              const key = trimmed.slice(0, eqIndex).trim();
+              let val = trimmed.slice(eqIndex + 1).trim();
+              if (
+                (val.startsWith('"') && val.endsWith('"')) ||
+                (val.startsWith("'") && val.endsWith("'"))
+              ) {
+                val = val.slice(1, -1);
+              }
+              if (!process.env[key]) {
+                process.env[key] = val;
+              }
+            }
+          }
+        });
+      } catch {
+        // Abaikan kegagalan baca file env individual
+      }
+    }
+  }
+}
+
+loadEnvironment();
+
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const DIST_DIR = path.resolve(process.cwd(), 'dist');
 

@@ -21,7 +21,7 @@ Pemuatan variabel lingkungan tidak terjadi secara ajaib; mekanisme diatur secara
 2. **Script Standalone / Verifier (`tests/verifyExtractionLive.ts`)**:
    Eksekusi `npx tsx` **tidak** secara otomatis membaca file `.env` tanpa konfigurasi loader. Oleh karena itu, script `verifyExtractionLive.ts` dilengkapi fungsi `loadEnvManually()` internal yang membaca dan mem-parsing `.env.local` atau `.env` secara aman (menghapus kutipan pembungkus dan komentar) ke `process.env` sebelum memanggil `GeminiService`. Alternatifnya, pengguna dapat menjalankan Node.js 20+ dengan flag bawaan `npx tsx --env-file=.env tests/verifyExtractionLive.ts`.
 3. **Produksi (`npm run serve`)**:
-   Server produksi membaca `process.env.GEMINI_API_KEY` dari environment host (Docker, VPS, Railway, Render, atau Vercel Environment Variables).
+   Server produksi mandiri ([`src/server/prodServer.ts`](file:///c:/Users/Daaris%20Yuda%20Saputra/OneDrive/Documents/TugasIn/src/server/prodServer.ts)) dilengkapi fungsi `loadEnvironment()` bawaan yang memeriksa file `.env.production`, `.env.local`, dan `.env` pada direktori root dan memuatnya ke `process.env` tanpa menimpa environment variable bawaan host/container. Ini menjamin kemudahan deployment di lingkungan VPS, Docker, Railway, maupun eksekusi lokal.
 
 ---
 
@@ -250,12 +250,42 @@ Jika tim memilih hosting serverless di Vercel, handler `handleExtractTask` dan `
 
 ---
 
-## 7. Status Pengujian & Verifikasi Akhir
+## 7. Koreksi Batasan Pengujian: Unit Test Workflow vs Pengujian Aktual
+
+> [!IMPORTANT]
+> **Koreksi Laporan Pengujian**:
+> Pengujian unit workflow (seperti `taskSaveWorkflow.test.ts` dan suite `extraction.test.ts`) berjalan sepenuhnya *in-memory* menggunakan mock client.
+> Pengujian tersebut membuktikan kebenaran logika bisnis, transisi alur penyimpanan tugas, penegakan aturan tenggat waktu PRD Bagian 8, serta penanganan error kode.
+> Namun, pengujian unit **BUKAN bukti pengujian end-to-end browser atau transmisi HTTP aktual** melalui jaringan dan server web.
+
+Pengujian transmisi HTTP aktual dan runtime produksi dilakukan secara terpisah melalui server produksi mandiri (`npm run serve`) sebagaimana dilaporkan pada Bagian 8 di bawah.
+
+---
+
+## 8. Hasil Pengujian HTTP Server Produksi (`npm run serve`)
+
+Server produksi mandiri diuji pada `http://localhost:3000` dengan hasil aktual berikut:
+
+| Endpoint / Target | Metode | Status HTTP | Respons & Bukti Pengujian |
+|---|---|---|---|
+| `/` | `GET` | `200 OK` | Mengembalikan file HTML SPA (`dist/index.html`, 1.091 bytes, `<title>TugasIn - Dari chat jadi checklist</title>`) |
+| `/assets/index-vnWKoeSN.js` | `GET` | `200 OK` | Header `Content-Type: application/javascript; charset=utf-8`, 230.703 bytes bundle JavaScript |
+| `/assets/index-Boz782Jz.css` | `GET` | `200 OK` | Header `Content-Type: text/css; charset=utf-8`, 35.160 bytes stylesheet CSS |
+| `/api/extract-task` (Tanpa API Key) | `POST` | `503 Service Unavailable` | `{"error":{"code":"UNCONFIGURED_SERVER","message":"Konfigurasi Gemini API key di server belum tersedia. Silakan atur GEMINI_API_KEY pada file .env server."}}` |
+| `/api/extract-task` (Payload Kosong `{}`) | `POST` | `400 Bad Request` | `{"error":{"code":"INVALID_INPUT","message":"Teks pengumuman wajib diisi."}}` |
+| `/api/generate-checklist` (Tanpa API Key) | `POST` | `503 Service Unavailable` | `{"error":{"code":"UNCONFIGURED_SERVER","message":"Konfigurasi Gemini API key di server belum tersedia."}}` |
+| `/api/generate-checklist` (Payload Kosong `{}`) | `POST` | `400 Bad Request` | `{"error":{"code":"INVALID_INPUT","message":"Judul tugas wajib diisi."}}` |
+
+---
+
+## 9. Status Pengujian & Bagian yang Belum Diuji
 
 | Pengujian / Tahap | Status | Bukti / Catatan |
 |---|---|---|
 | **Typecheck (`tsc --noEmit`)** | ✅ **Lulus (0 error)** | Seluruh kode TypeScript memenuhi Strict Mode tanpa `any`. |
 | **Unit & Integration Suite (`vitest run`)** | ✅ **Lulus (64 tests)** | Mencakup 25 test ekstraksi backend, 7 test checklist, 7 test frontend service, dan 25 test deadline/task/dashboard. |
 | **Dashboard Audit Suite (`src/test/verifyDashboard.ts`)** | ✅ **Lulus (14 tests)** | Audit kepatuhan IANA timezone, 4-tier sorting, dan overdue calculation. |
-| **Production Build (`vite build`)** | ✅ **Lulus** | Bundle frontend terbangun bersih dalam 4.32 detik. |
-| **Panggilan Langsung Gemini API (Live Call)** | ⚠️ **Belum Terverifikasi Langsung** | Menunggu penyediaan `GEMINI_API_KEY` aktif di `.env`. Script pemverifikasi siap diuji via `npx tsx tests/verifyExtractionLive.ts`. |
+| **Production Build (`npm run build`)** | ✅ **Lulus** | Bundle frontend terbangun bersih di `dist/` dalam 4.89 detik. |
+| **HTTP Production Server (`npm run serve`)** | ✅ **Lulus Terverifikasi** | Halaman root, aset JS/CSS, serta respons HTTP 503 & 400 pada kedua endpoint backend teruji via HTTP. |
+| **Panggilan Langsung Gemini API (Live AI Call)** | ⚠️ **Belum Diuji (Menunggu Key Tim)** | Belum ada `GEMINI_API_KEY` aktif pada environment/`.env`. Script pemverifikasi siap dieksekusi via `npx tsx tests/verifyExtractionLive.ts` begitu key tersedia. |
+| **Uji Ekstraksi & Checklist Live di Browser** | ⚠️ **Belum Diuji (Menunggu Key Tim)** | Alur live browser (input pengumuman -> ekstraksi AI -> simpan tugas -> refresh dashboard) membutuhkan API key aktif dan browser lokal pengguna. |

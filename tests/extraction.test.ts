@@ -135,11 +135,11 @@ describe('Backend Extraction Unit & Integration Tests (Mocked Gemini Client)', (
       assert.equal(draft.title, 'Tugas Desain Wireframe Aplikasi Perpustakaan');
       assert.equal(draft.course, 'UI/UX');
       assert.equal(draft.dueDate, '2026-10-21');
-      assert.equal(draft.dueTime, '23:59');
-      assert.equal(draft.sourceTimezone, 'WIB');
+      assert.equal(draft.sourceTimezone, 'Asia/Jakarta', 'WIB dinormalisasi ke zona IANA Asia/Jakarta');
       assert.ok(Array.isArray(draft.requirements));
       assert.equal(draft.requirements.length, 3);
       assert.equal(draft.isAmbiguousDeadline, undefined);
+      assert.ok(Array.isArray(res.body.warnings), 'warnings selalu berupa array sesuai kontrak');
 
       assert.ok(res.body.criticalFieldEvidence);
       assert.ok(res.body.criticalFieldEvidence.title);
@@ -402,6 +402,135 @@ describe('Backend Extraction Unit & Integration Tests (Mocked Gemini Client)', (
       assert.ok(res.body.draft);
       assert.equal(res.body.draft.dueDate, '2026-10-25');
       assert.equal(res.body.draft.dueTime, null, 'Dilarang mengasumsikan jam 23.59');
+    });
+
+    it('Normalisasi sourceTimezone WITA ke Asia/Makassar dan WIT ke Asia/Jayapura', async () => {
+      const mockClient = new MockGeminiExtractionClient();
+      mockClient.mockResponse = {
+        resultType: 'task',
+        title: 'Tugas Geologi',
+        course: 'Geologi',
+        description: 'Tugas observasi batuan.',
+        dueDate: '2026-11-05',
+        dueTime: '16:00',
+        sourceTimezone: 'WITA',
+        requirements: [],
+      };
+
+      const res = await handleExtractTask(
+        {
+          text: 'Tugas Geologi kumpul 5 November 2026 jam 16:00 WITA.',
+          displayTimezone: 'Asia/Makassar',
+        },
+        mockClient
+      );
+
+      assert.equal(res.status, 200);
+      assert.ok(res.body.draft);
+      assert.equal(res.body.draft.sourceTimezone, 'Asia/Makassar', 'WITA dinormalisasi ke Asia/Makassar');
+    });
+
+    it('TIDAK MENGARANG sourceTimezone jika zona tidak disebutkan di pengumuman (tetap null)', async () => {
+      const mockClient = new MockGeminiExtractionClient();
+      mockClient.mockResponse = {
+        resultType: 'task',
+        title: 'Tugas Kimia',
+        course: 'Kimia Dasar',
+        description: 'Laporan praktikum reaksi asam basa.',
+        dueDate: '2026-11-10',
+        dueTime: '15:00',
+        sourceTimezone: '', // Tidak ada zona di teks
+        requirements: [],
+      };
+
+      const res = await handleExtractTask(
+        {
+          text: 'Tugas Kimia Dasar dikumpulkan 10 November 2026 pukul 15:00 di laboratorium.',
+          displayTimezone: 'Asia/Jakarta',
+        },
+        mockClient
+      );
+
+      assert.equal(res.status, 200);
+      assert.ok(res.body.draft);
+      assert.equal(
+        res.body.draft.sourceTimezone,
+        null,
+        'Dilarang mengubah zona yang tidak disebutkan menjadi fakta sumber'
+      );
+    });
+
+    it('Membedakan tahun angkatan/kurikulum dan HANYA mengambil deadline pengumpulan tugas yang valid', async () => {
+      const mockClient = new MockGeminiExtractionClient();
+      const rawText =
+        'Untuk mahasiswa angkatan 2024, silakan kerjakan tugas review paper jurnal terbitan 2021. Kumpulkan tugas paling lambat 25 Oktober 2026 pukul 23.59 WIB.';
+
+      mockClient.mockResponse = {
+        resultType: 'task',
+        title: 'Tugas Review Paper Jurnal',
+        course: 'Metodologi Penelitian',
+        description: 'Review paper terbitan 2021 untuk mahasiswa angkatan 2024.',
+        dueDate: '2026-10-25',
+        dueTime: '23:59',
+        sourceTimezone: 'WIB',
+        requirements: ['Review paper terbitan 2021'],
+        criticalFieldEvidence: {
+          title: 'tugas review paper jurnal',
+          deadline: 'Kumpulkan tugas paling lambat 25 Oktober 2026 pukul 23.59 WIB',
+          requirements: 'review paper jurnal terbitan 2021',
+        },
+      };
+
+      const res = await handleExtractTask(
+        {
+          text: rawText,
+          displayTimezone: 'Asia/Jakarta',
+        },
+        mockClient
+      );
+
+      assert.equal(res.status, 200);
+      assert.ok(res.body.draft);
+      // Tanggal deadline adalah 25 Oktober 2026, BUKAN 2024 atau 2021!
+      assert.equal(res.body.draft.dueDate, '2026-10-25');
+      assert.equal(res.body.draft.sourceTimezone, 'Asia/Jakarta');
+      assert.ok(res.body.criticalFieldEvidence);
+      assert.ok(
+        res.body.criticalFieldEvidence.deadline.includes('25 Oktober 2026'),
+        'Bukti deadline mengutip kalimat pengumpulan, bukan tahun angkatan'
+      );
+    });
+
+    it('Teks dengan tahun kurikulum tanpa tanggal deadline tetap menghasilkan dueDate null', async () => {
+      const mockClient = new MockGeminiExtractionClient();
+      const rawText =
+        'Berdasarkan kurikulum 2020, mahasiswa angkatan 2023 wajib menyusun draf laporan magang.';
+
+      mockClient.mockResponse = {
+        resultType: 'task',
+        title: 'Draf Laporan Magang',
+        course: null,
+        description: 'Menyusun draf laporan magang berdasarkan kurikulum 2020.',
+        dueDate: '',
+        dueTime: '',
+        sourceTimezone: '',
+        requirements: [],
+      };
+
+      const res = await handleExtractTask(
+        {
+          text: rawText,
+          displayTimezone: 'Asia/Jakarta',
+        },
+        mockClient
+      );
+
+      assert.equal(res.status, 200);
+      assert.ok(res.body.draft);
+      assert.equal(res.body.draft.dueDate, null, 'Tahun kurikulum 2020 bukan deadline');
+      assert.equal(res.body.draft.dueTime, null);
+      assert.equal(res.body.draft.isAmbiguousDeadline, undefined);
+      assert.ok(res.body.warnings && res.body.warnings.some((w) => w.includes('tidak memuat tenggat')));
     });
   });
 

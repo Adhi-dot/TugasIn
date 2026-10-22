@@ -9,6 +9,7 @@
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
+    "serve": "tsx src/server/prodServer.ts",
     "test": "vitest run",
     "test:all": "vitest run && npx tsx src/test/verifyDashboard.ts && npx tsx tests/verifyExtractionLive.ts"
   },

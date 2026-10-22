@@ -102,6 +102,54 @@ function checkImpossibleDateInText(text: string): boolean {
 }
 
 /**
+ * Normalisasi Zona Waktu Sumber Pengumuman ke IANA Timezone Identifier Resmi
+ * Mengikuti PRD Bagian 9 & Aturan Arsitektur:
+ * - "WIB", "UTC+7", "GMT+7" dinormalisasi ke "Asia/Jakarta"
+ * - "WITA", "UTC+8", "GMT+8" dinormalisasi ke "Asia/Makassar"
+ * - "WIT", "UTC+9", "GMT+9" dinormalisasi ke "Asia/Jayapura"
+ * - Identifier IANA valid (misal "Asia/Jakarta", "UTC") dipertahankan
+ * - PENTING: Jika zona waktu TIDAK disebutkan di pengumuman, WAJIB mengembalikan null!
+ *   Dilarang mengubah zona yang tidak disebutkan menjadi fakta sumber (misal dilarang auto-fill Asia/Jakarta).
+ */
+export function normalizeSourceTimezone(
+  rawTz?: string | null,
+  announcementText?: string
+): string | null {
+  const text = announcementText || '';
+  const tzCandidate = (rawTz || '').trim();
+
+  // 1. Cek apakah di teks pengumuman atau field rawTz ada indikator zona waktu eksplisit
+  const combined = `${tzCandidate} ${text}`.toUpperCase();
+
+  const mentionsWIB = /\b(WIB|UTC\+7|GMT\+7)\b/.test(combined);
+  const mentionsWITA = /\b(WITA|UTC\+8|GMT\+8)\b/.test(combined);
+  const mentionsWIT = /\b(WIT|UTC\+9|GMT\+9)\b/.test(combined);
+
+  if (mentionsWIB) return 'Asia/Jakarta';
+  if (mentionsWITA) return 'Asia/Makassar';
+  if (mentionsWIT) return 'Asia/Jayapura';
+
+  // 2. Jika AI menghasilkan zona IANA valid yang cocok
+  if (tzCandidate.length > 0) {
+    const upperCandidate = tzCandidate.toUpperCase();
+    if (upperCandidate === 'ASIA/JAKARTA') return 'Asia/Jakarta';
+    if (upperCandidate === 'ASIA/MAKASSAR') return 'Asia/Makassar';
+    if (upperCandidate === 'ASIA/JAYAPURA') return 'Asia/Jayapura';
+    if (upperCandidate === 'UTC') return 'UTC';
+
+    try {
+      new Intl.DateTimeFormat(undefined, { timeZone: tzCandidate }).format();
+      return tzCandidate;
+    } catch {
+      return null;
+    }
+  }
+
+  // 3. Zona tidak disebutkan: WAJIB null!
+  return null;
+}
+
+/**
  * Controller Inti POST /api/extract-task
  * Menangani validasi request, pemanggilan client Gemini, serta penegakan aturan
  * deterministik tenggat waktu & ambiguitas sesuai PRD-TugasIn.md Bagian 8 & 9.
@@ -327,10 +375,10 @@ export async function handleExtractTask(
   const draftDescription =
     (rawAiResponse.description && rawAiResponse.description.trim()) || '';
 
-  const draftSourceTimezone =
-    rawAiResponse.sourceTimezone && rawAiResponse.sourceTimezone.trim().length > 0
-      ? rawAiResponse.sourceTimezone.trim()
-      : null;
+  const draftSourceTimezone = normalizeSourceTimezone(
+    rawAiResponse.sourceTimezone,
+    validatedInput.text
+  );
 
   const draftRequirements: string[] = Array.isArray(rawAiResponse.requirements)
     ? rawAiResponse.requirements
@@ -370,9 +418,8 @@ export async function handleExtractTask(
     body: {
       resultType: 'task',
       draft,
-      warnings: warnings.length > 0 ? warnings : undefined,
-      criticalFieldEvidence:
-        Object.keys(criticalFieldEvidence).length > 0 ? criticalFieldEvidence : undefined,
+      warnings,
+      criticalFieldEvidence,
     },
   };
 }

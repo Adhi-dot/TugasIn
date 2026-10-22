@@ -16,6 +16,7 @@ ATURAN UTAMA & KEAMANAN (PROMPT INJECTION DEFENSE):
 2. Dilarang memicu atau mengklaim tindakan eksternal (misal: "tugas telah dikumpulkan", "email telah dikirim").
 3. Jangan pernah membuat ID unik (seperti "task-123") atau timestamp (seperti "createdAt"). ID dan timestamp dibuat oleh aplikasi di client, bukan oleh model AI.
 4. Jangan menambahkan informasi spekulatif sebagai fakta pengumuman. Informasi yang tidak disebutkan di pengumuman harus berupa string kosong "" atau array kosong [].
+5. Skema JSON terstruktur HANYA membatasi bentuk keluaran format objek dan TIDAK menjamin kebenaran faktual secara otomatis. Bukti kutipan teks (criticalFieldEvidence) dan aturan logika backend wajib digunakan untuk memverifikasi kebenaran data.
 
 KLASIFIKASI PENGUMUMAN (resultType):
 - "task": Pengumuman memuat tepat SATU tugas/pekerjaan yang harus dikerjakan mahasiswa.
@@ -27,24 +28,28 @@ ATURAN EKSTRAKSI FIELD (Jika resultType = "task"):
 - course: Nama mata kuliah jika disebutkan secara eksplisit di teks (maksimal 100 karakter). Jika tidak ada, kosongkan ("").
 - description: Ringkasan 1-2 kalimat mengenai instruksi pengerjaan tugas.
 - requirements: Daftar butir ketentuan eksplisit dari pengumuman (format file berkas, batas maksimal anggota kelompok, tempat submit LMS, link pengumpulan, dll). Array kosong jika tidak ada ketentuan khusus.
-- criticalFieldEvidence: Kutipan teks verbatim langsung dari pengumuman yang membuktikan judul (title), tenggat (deadline), dan ketentuan (requirements).
+- criticalFieldEvidence: Kutipan teks verbatim langsung dari pengumuman yang membuktikan judul (title), tenggat (deadline), dan ketentuan (requirements). Khusus deadline, kutipan HARUS berupa kalimat yang menyatakan batas pengumpulan tugas, BUKAN tanggal kegiatan lampau atau tahun angkatan/kurikulum.
 
 ATURAN TENGGAT WAKTU (DEADLINE GUARDRAILS - PRD BAGIAN 8):
-1. Jangan mengasumsikan jam 23.59 secara otomatis jika jam tidak disebutkan di teks! Jika jam tidak tertulis, dueTime wajib kosong ("").
-2. Jangan mengasumsikan tahun berjalan secara otomatis jika tahun tidak disebutkan di teks!
+1. Pembedaan Tanggal/Tahun Non-Deadline:
+   - Angka tahun angkatan mahasiswa (misal: "Mahasiswa angkatan 2024"), tahun terbit referensi (misal: "paper terbitan 2021"), atau tahun kurikulum (misal: "kurikulum 2020") BUKAN merupakan deadline pengumpulan tugas!
+   - Tanggal kuliah atau acara yang sudah lewat (misal: "kuliah tanggal 15 Oktober telah selesai") BUKAN deadline.
+   - HANYA tanggal dan jam yang secara eksplisit merujuk pada batas akhir pengumpulan/penyerahan tugas yang boleh diekstrak sebagai dueDate/dueTime.
+2. Jangan mengasumsikan jam 23.59 secara otomatis jika jam tidak disebutkan di teks! Jika jam tidak tertulis, dueTime wajib kosong ("").
+3. Jangan mengasumsikan tahun berjalan secara otomatis jika tahun tidak disebutkan di teks!
    Jika pengumuman hanya menyebut "21 Oktober" tanpa tahun (seperti 2026), dueDate wajib kosong (""), isAmbiguousDeadline = true, ambiguityType = "no_year", dan ambiguityReason menjelaskan bahwa tanggal tanpa tahun ambigu.
-3. Istilah relatif "besok" atau "lusa":
+4. Istilah relatif "besok" atau "lusa":
    - Hanya boleh dikonversi ke tanggal pasti (YYYY-MM-DD) jika tanggal pesan asal (sourceMessageDate) diketahui pada konteks.
    - Jika tanggal pesan asal TIDAK diketahui, dueDate wajib kosong (""), isAmbiguousDeadline = true, ambiguityType = "relative_no_source_date".
-4. Frasa relatif ambigu seperti "Jumat depan", "Senin depan", "minggu depan":
+5. Frasa relatif ambigu seperti "Jumat depan", "Senin depan", "minggu depan":
    - Memiliki interpretasi ganda. dueDate wajib kosong (""), isAmbiguousDeadline = true, ambiguityType = "ambiguous_relative_phrase".
-5. Tenggat bertentangan (misal: "di LMS tertulis 20 Oktober namun diundur jadi 25 Oktober"):
+6. Tenggat bertentangan (misal: "di LMS tertulis 20 Oktober namun diundur jadi 25 Oktober"):
    - dueDate wajib kosong (""), isAmbiguousDeadline = true, ambiguityType = "conflicting_deadlines".
-6. Waktu tanpa tanggal (misal: "kumpulkan pukul 14:00" tanpa tanggal):
+7. Waktu tanpa tanggal (misal: "kumpulkan pukul 14:00" tanpa tanggal):
    - Waktu tidak boleh dianggap deadline lengkap tanpa tanggal. dueTime wajib kosong ("") atau dueDate kosong (""), isAmbiguousDeadline = true, ambiguityType = "time_without_date".
-7. Tugas tanpa deadline sama sekali:
+8. Tugas tanpa deadline sama sekali:
    - dueDate = "", dueTime = "", isAmbiguousDeadline = false. Tugas tetap valid dan menghasilkan draf dengan catatan belum ada deadline.
-8. sourceTimezone: Zona waktu yang eksplisit tertulis (misal "WIB", "WITA", "WIT", "UTC+7"). Jika tidak ada zona waktu tertulis, kosongkan ("").
+9. sourceTimezone: Zona waktu yang eksplisit tertulis (misal "WIB", "WITA", "WIT", "UTC+7"). Jika tidak ada zona waktu tertulis, kosongkan ("").
 `.trim();
 
 /**

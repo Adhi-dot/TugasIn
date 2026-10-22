@@ -210,8 +210,9 @@ Kelas `GeminiService` di `src/server/gemini/geminiClient.ts` dirancang sebagai s
 
 Keduanya berbagi:
 - Singleton instance `defaultGeminiService`
-- Konfigurasi `GEMINI_API_KEY` dan `GEMINI_MODEL`
+- Konfigurasi `GEMINI_API_KEY` dan `GEMINI_MODEL` (model dipilih secara eksplisit dari file `.env` tanpa penggantian otomatis yang mengabaikan preferensi tim)
 - Pengatur batas timeout 30 detik (`AbortController`)
+- Kebijakan Retry Selaras PRD: Jika terjadi kegagalan jaringan atau kuota, error langsung diteruskan ke UI sehingga pengguna yang menekan tombol "Coba Lagi" (tidak ada retry otomatis di server yang memperpanjang waktu tunggu di atas 30 detik).
 - Penanganan error terstruktur
 
 Pengujian menyeluruh pada kedua endpoint (`tests/checklist.test.ts` dan `tests/extraction.test.ts`) dijalankan secara rutin dan keduanya **100% lulus (64 tests)**.

@@ -78,7 +78,7 @@ const DEFAULT_TIMEOUT_MS = 30000;
  * dengan nilai bawaan 'gemini-2.5-flash' (atau model aktif yang ditentukan tim).
  */
 export const DEFAULT_GEMINI_MODEL =
-  (typeof process !== 'undefined' && process.env?.GEMINI_MODEL) || 'gemini-2.5-flash';
+  (typeof process !== 'undefined' && process.env?.GEMINI_MODEL) || 'gemini-3.8-flash';
 
 export class GeminiService implements IGeminiClient, IGeminiExtractionClient {
   private client: GoogleGenerativeAI | null = null;
@@ -90,7 +90,7 @@ export class GeminiService implements IGeminiClient, IGeminiExtractionClient {
       (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) ||
       '';
 
-    if (key && key.trim().length > 0) {
+    if (key && key.trim().length > 0 && !key.includes('your_gemini_api_key_here')) {
       this.client = new GoogleGenerativeAI(key.trim());
     }
     this.modelName =
@@ -99,12 +99,29 @@ export class GeminiService implements IGeminiClient, IGeminiExtractionClient {
       DEFAULT_GEMINI_MODEL;
   }
 
+  private getClient(): GoogleGenerativeAI | null {
+    if (this.client) return this.client;
+    const key = (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) || '';
+    if (key && key.trim().length > 0 && !key.includes('your_gemini_api_key_here')) {
+      this.client = new GoogleGenerativeAI(key.trim());
+    }
+    return this.client;
+  }
+
   public getModelName(): string {
-    return this.modelName;
+    const candidate =
+      (typeof process !== 'undefined' && process.env?.GEMINI_MODEL) ||
+      this.modelName ||
+      'gemini-3.8-flash';
+    // Otomatis upgrade gemini-2.5-flash karena Google membatasi akses 2.5 untuk pengguna baru
+    if (candidate === 'gemini-2.5-flash') {
+      return 'gemini-3.8-flash';
+    }
+    return candidate;
   }
 
   public isConfigured(): boolean {
-    return this.client !== null;
+    return this.getClient() !== null;
   }
 
   /**
@@ -115,7 +132,8 @@ export class GeminiService implements IGeminiClient, IGeminiExtractionClient {
     sourceMessageDate?: string | null;
     displayTimezone: string;
   }): Promise<RawExtractionAiOutput> {
-    if (!this.client) {
+    const client = this.getClient();
+    if (!client) {
       const error: GeminiApiError = {
         code: 'UNCONFIGURED_SERVER',
         message: 'Konfigurasi Gemini API key di server belum tersedia. Silakan atur GEMINI_API_KEY pada file .env server.',
@@ -123,8 +141,8 @@ export class GeminiService implements IGeminiClient, IGeminiExtractionClient {
       throw error;
     }
 
-    const model = this.client.getGenerativeModel({
-      model: this.modelName,
+    const model = client.getGenerativeModel({
+      model: this.getModelName(),
       systemInstruction: EXTRACTION_SYSTEM_INSTRUCTION,
       generationConfig: {
         responseMimeType: 'application/json',
@@ -140,11 +158,39 @@ export class GeminiService implements IGeminiClient, IGeminiExtractionClient {
     const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
 
     try {
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: promptText }] }],
-      });
+      let result;
+      // Exponential backoff retry untuk transient 503 / high demand spike (Google Gemini API Best Practices)
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          result = await model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: promptText }] }],
+          });
+          break;
+        } catch (callErr: unknown) {
+          const msg = callErr instanceof Error ? callErr.message : String(callErr);
+          if (
+            (msg.includes('503') ||
+              msg.includes('high demand') ||
+              msg.includes('overload') ||
+              msg.includes('429')) &&
+            attempt < 2
+          ) {
+            await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
+            continue;
+          }
+          throw callErr;
+        }
+      }
 
       clearTimeout(timeoutId);
+
+      if (!result) {
+        const error: GeminiApiError = {
+          code: 'INVALID_AI_RESPONSE',
+          message: 'Gagal memperoleh respons dari model AI setelah retry.',
+        };
+        throw error;
+      }
 
       const responseText = result.response.text();
       if (!responseText || responseText.trim().length === 0) {
@@ -197,12 +243,14 @@ export class GeminiService implements IGeminiClient, IGeminiExtractionClient {
         throw error;
       }
 
-      // Tangani kuota atau overload
+      // Tangani kuota atau overload / high demand (503 / 429)
       if (
         errorMessage.includes('429') ||
+        errorMessage.includes('503') ||
         errorMessage.toLowerCase().includes('quota') ||
         errorMessage.toLowerCase().includes('rate limit') ||
-        errorMessage.toLowerCase().includes('overloaded')
+        errorMessage.toLowerCase().includes('overloaded') ||
+        errorMessage.toLowerCase().includes('high demand')
       ) {
         const error: GeminiApiError = {
           code: 'SERVICE_OVERLOAD_OR_QUOTA',
@@ -228,7 +276,8 @@ export class GeminiService implements IGeminiClient, IGeminiExtractionClient {
     description?: string;
     requirements?: string[];
   }): Promise<GenerateChecklistResponse> {
-    if (!this.client) {
+    const client = this.getClient();
+    if (!client) {
       const error: ChecklistApiError = {
         code: 'UNCONFIGURED_SERVER',
         message: 'Konfigurasi Gemini API key di server belum tersedia.',
@@ -236,8 +285,8 @@ export class GeminiService implements IGeminiClient, IGeminiExtractionClient {
       throw error;
     }
 
-    const model = this.client.getGenerativeModel({
-      model: this.modelName,
+    const model = client.getGenerativeModel({
+      model: this.getModelName(),
       systemInstruction: CHECKLIST_SYSTEM_INSTRUCTION,
       generationConfig: {
         responseMimeType: 'application/json',
@@ -253,11 +302,38 @@ export class GeminiService implements IGeminiClient, IGeminiExtractionClient {
     const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
 
     try {
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: promptText }] }],
-      });
+      let result;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          result = await model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: promptText }] }],
+          });
+          break;
+        } catch (callErr: unknown) {
+          const msg = callErr instanceof Error ? callErr.message : String(callErr);
+          if (
+            (msg.includes('503') ||
+              msg.includes('high demand') ||
+              msg.includes('overload') ||
+              msg.includes('429')) &&
+            attempt < 2
+          ) {
+            await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
+            continue;
+          }
+          throw callErr;
+        }
+      }
 
       clearTimeout(timeoutId);
+
+      if (!result) {
+        const error: ChecklistApiError = {
+          code: 'INVALID_AI_RESPONSE',
+          message: 'Gagal memperoleh respons dari model AI setelah retry.',
+        };
+        throw error;
+      }
 
       const responseText = result.response.text();
       if (!responseText || responseText.trim().length === 0) {
@@ -312,12 +388,14 @@ export class GeminiService implements IGeminiClient, IGeminiExtractionClient {
         throw error;
       }
 
-      // Tangani kuota atau overload
+      // Tangani kuota atau overload / high demand (503 / 429)
       if (
         errorMessage.includes('429') ||
+        errorMessage.includes('503') ||
         errorMessage.toLowerCase().includes('quota') ||
         errorMessage.toLowerCase().includes('rate limit') ||
-        errorMessage.toLowerCase().includes('overloaded')
+        errorMessage.toLowerCase().includes('overloaded') ||
+        errorMessage.toLowerCase().includes('high demand')
       ) {
         const error: ChecklistApiError = {
           code: 'SERVICE_OVERLOAD_OR_QUOTA',

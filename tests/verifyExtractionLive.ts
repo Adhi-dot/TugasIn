@@ -128,6 +128,8 @@ async function runLiveVerification() {
   // Menguji kompatibilitas client Gemini bersama
   // -------------------------------------------------------------
   console.log('\n--- [TEST B] Pembuatan Checklist AI (Client Bersama) ---');
+  console.log('⏳ Menunggu jeda 15 detik untuk mematuhi kuota RPM Gemini Free Tier...');
+  await new Promise((resolve) => setTimeout(resolve, 15000));
   try {
     const startTime = Date.now();
     const result = await handleGenerateChecklist(

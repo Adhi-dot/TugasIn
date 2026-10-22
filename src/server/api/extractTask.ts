@@ -101,6 +101,54 @@ function checkImpossibleDateInText(text: string): boolean {
   return false;
 }
 
+const INDONESIAN_MONTH_MAP: Record<string, number> = {
+  januari: 1, jan: 1,
+  februari: 2, feb: 2,
+  maret: 3, mar: 3,
+  april: 4, apr: 4,
+  mei: 5,
+  juni: 6, jun: 6,
+  juli: 7, jul: 7,
+  agustus: 8, agu: 8,
+  september: 9, sep: 9,
+  oktober: 10, okt: 10,
+  november: 11, nov: 11,
+  desember: 12, des: 12,
+};
+
+/**
+ * Utilitas konversi string tanggal (ISO atau format teks Indonesia) ke format ISO YYYY-MM-DD
+ */
+export function parseIndonesianDateToIso(rawDateStr?: string | null): string | null {
+  if (!rawDateStr) return null;
+  const trimmed = rawDateStr.trim();
+
+  // 1. Format ISO YYYY-MM-DD
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    const y = parseInt(isoMatch[1], 10);
+    const m = parseInt(isoMatch[2], 10);
+    const d = parseInt(isoMatch[3], 10);
+    return isValidCalendarDate(y, m, d)
+      ? `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+      : null;
+  }
+
+  // 2. Format teks Indonesia: "21 Oktober 2026"
+  const textMatch = trimmed.match(/\b(\d{1,2})\s+([a-zA-Z]+)\s+(20\d{2})\b/);
+  if (textMatch) {
+    const d = parseInt(textMatch[1], 10);
+    const monthName = textMatch[2].toLowerCase();
+    const y = parseInt(textMatch[3], 10);
+    const m = INDONESIAN_MONTH_MAP[monthName];
+    if (m && isValidCalendarDate(y, m, d)) {
+      return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    }
+  }
+
+  return null;
+}
+
 /**
  * Normalisasi Zona Waktu Sumber Pengumuman ke IANA Timezone Identifier Resmi
  * Mengikuti PRD Bagian 9 & Aturan Arsitektur:
@@ -307,19 +355,16 @@ export async function handleExtractTask(
       ambiguityReason = undefined;
       ambiguityType = undefined;
     }
-  } else if (!isAmbiguousDeadline && rawAiResponse.dueDate && rawAiResponse.dueDate.trim().length > 0) {
-    // Verifikasi tanggal dari AI
-    const dateMatch = rawAiResponse.dueDate.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (dateMatch) {
-      const year = parseInt(dateMatch[1], 10);
-      const month = parseInt(dateMatch[2], 10);
-      const day = parseInt(dateMatch[3], 10);
-      if (isValidCalendarDate(year, month, day)) {
-        dueDate = rawAiResponse.dueDate.trim();
-      } else {
-        isAmbiguousDeadline = true;
-        ambiguityReason = 'Tanggal tenggat yang terdeteksi tidak valid dalam kalender.';
-        warnings.push(ambiguityReason);
+  } else if (!isAmbiguousDeadline) {
+    // 1. Cek apakah model AI mengembalikan tanggal
+    const parsedAiDate = parseIndonesianDateToIso(rawAiResponse.dueDate);
+    if (parsedAiDate) {
+      dueDate = parsedAiDate;
+    } else {
+      // 2. Fallback deterministik: cek apakah teks memuat tanggal lengkap dengan 4 digit tahun (contoh: "21 Oktober 2026")
+      const parsedTextDate = parseIndonesianDateToIso(validatedInput.text);
+      if (parsedTextDate) {
+        dueDate = parsedTextDate;
       }
     }
   }
@@ -327,8 +372,16 @@ export async function handleExtractTask(
   // Waktu pengumpulan (dueTime)
   // Aturan PRD: Waktu tidak boleh dianggap deadline lengkap tanpa tanggal.
   // dueTime hanya boleh terisi jika dueDate tersedia. Jangan pernah asumsikan 23:59 otomatis.
-  const rawDueTime = rawAiResponse.dueTime ? rawAiResponse.dueTime.trim() : null;
-  const timeMatch = rawDueTime ? rawDueTime.match(/^([01]?\d|2[0-3]):([0-5]\d)$/) : null;
+  let rawDueTime = rawAiResponse.dueTime ? rawAiResponse.dueTime.trim() : null;
+  if (!rawDueTime) {
+    // Deteksi waktu eksplisit dari teks pengumuman (contoh: "pukul 23.59" atau "23:59")
+    const textTimeMatch = validatedInput.text.match(/\b(?:pukul|jam)?\s*([01]?\d|2[0-3])[:.]([0-5]\d)\b/i);
+    if (textTimeMatch) {
+      rawDueTime = `${textTimeMatch[1]}:${textTimeMatch[2]}`;
+    }
+  }
+
+  const timeMatch = rawDueTime ? rawDueTime.match(/^([01]?\d|2[0-3])[:.]([0-5]\d)$/) : null;
 
   if (timeMatch && dueDate) {
     // Normalisasi format HH:mm
@@ -348,15 +401,19 @@ export async function handleExtractTask(
     dueTime = null;
   }
 
-  // Tugas tanpa deadline sama sekali (PRD: Tugas tanpa deadline tetap menghasilkan draft)
+  // PRD Bagian 8: Tugas tanpa deadline sama sekali tetap menghasilkan draft dengan peringatan
+  // PENTING: Hanya tambahkan peringatan jika deadline memang BENAR-BENAR TIDAK ADA dan tidak ambigu
   if (!dueDate && !isAmbiguousDeadline) {
     warnings.push('Pengumuman tidak memuat tenggat waktu pengumpulan (perlu dilengkapi).');
   }
 
-  // Masukkan peringatan tambahan dari model jika ada
+  // Masukkan peringatan tambahan dari model jika ada (filter peringatan palsu/kontradiktif jika deadline sudah lengkap)
   if (Array.isArray(rawAiResponse.warnings)) {
     for (const w of rawAiResponse.warnings) {
       const trimmedW = String(w).trim();
+      if (dueDate && trimmedW.toLowerCase().includes('tenggat')) {
+        continue; // Hindari warning tenggat palsu jika dueDate berhasil teridentifikasi lengkap
+      }
       if (trimmedW && !warnings.includes(trimmedW)) {
         warnings.push(trimmedW);
       }
@@ -367,10 +424,18 @@ export async function handleExtractTask(
   const draftTitle =
     (rawAiResponse.title && rawAiResponse.title.trim()) || 'Tugas Baru dari Pengumuman';
 
-  const draftCourse =
+  let draftCourse =
     rawAiResponse.course && rawAiResponse.course.trim().length > 0
       ? rawAiResponse.course.trim().slice(0, 100)
       : null;
+
+  // Fallback nama mata kuliah jika disebutkan eksplisit di teks tapi terlewat oleh AI
+  if (!draftCourse) {
+    const courseRegexMatch = validatedInput.text.match(/\b(?:mata\s*kuliah|matkul)\s+([A-Za-z0-9/ ]+?)(?:,|\.|\bbuat\b|\btugas\b|\bprojek\b|$)/i);
+    if (courseRegexMatch && courseRegexMatch[1].trim().length > 0) {
+      draftCourse = courseRegexMatch[1].trim().slice(0, 100);
+    }
+  }
 
   const draftDescription =
     (rawAiResponse.description && rawAiResponse.description.trim()) || '';
@@ -380,11 +445,25 @@ export async function handleExtractTask(
     validatedInput.text
   );
 
-  const draftRequirements: string[] = Array.isArray(rawAiResponse.requirements)
+  let draftRequirements: string[] = Array.isArray(rawAiResponse.requirements)
     ? rawAiResponse.requirements
         .map((r) => String(r).trim())
         .filter((r) => r.length > 0)
     : [];
+
+  // Fallback ketentuan eksplisit jika terlewat oleh AI
+  if (draftRequirements.length === 0) {
+    if (/\bmaksimal\s+\d+\s+anggota\b/i.test(validatedInput.text)) {
+      const match = validatedInput.text.match(/\bmaksimal\s+\d+\s+anggota[^\n,.]*/i);
+      if (match) draftRequirements.push(match[0].trim());
+    }
+    if (/\b(?:format|file)\s+pdf\b/i.test(validatedInput.text) || /\bkumpulkan\s+pdf\b/i.test(validatedInput.text)) {
+      draftRequirements.push('Format PDF');
+    }
+    if (/\blms\b/i.test(validatedInput.text)) {
+      draftRequirements.push('Kumpul melalui LMS');
+    }
+  }
 
   const draft: TaskDraft = {
     title: draftTitle.slice(0, 150),
@@ -403,14 +482,24 @@ export async function handleExtractTask(
   const criticalFieldEvidence: Record<string, string> = {};
   if (rawAiResponse.criticalFieldEvidence?.title?.trim()) {
     criticalFieldEvidence.title = rawAiResponse.criticalFieldEvidence.title.trim();
+  } else {
+    criticalFieldEvidence.title = draftTitle;
   }
+
   if (rawAiResponse.criticalFieldEvidence?.deadline?.trim()) {
     criticalFieldEvidence.deadline = rawAiResponse.criticalFieldEvidence.deadline.trim();
   } else if (dueDate) {
-    criticalFieldEvidence.deadline = `${dueDate}${dueTime ? ' ' + dueTime : ''}`;
+    // Cari kalimat di pengumuman yang memuat deadline
+    const deadlineSentenceMatch = validatedInput.text.match(/[^.!?\n]*\b(?:kumpulkan|tenggat|deadline|batas|pada)\b[^.!?\n]*/i);
+    criticalFieldEvidence.deadline = deadlineSentenceMatch
+      ? deadlineSentenceMatch[0].trim()
+      : `${dueDate}${dueTime ? ' ' + dueTime : ''}`;
   }
+
   if (rawAiResponse.criticalFieldEvidence?.requirements?.trim()) {
     criticalFieldEvidence.requirements = rawAiResponse.criticalFieldEvidence.requirements.trim();
+  } else if (draftRequirements.length > 0) {
+    criticalFieldEvidence.requirements = draftRequirements.join('. ');
   }
 
   return {

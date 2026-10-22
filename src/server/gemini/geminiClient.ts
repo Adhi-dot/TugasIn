@@ -109,15 +109,11 @@ export class GeminiService implements IGeminiClient, IGeminiExtractionClient {
   }
 
   public getModelName(): string {
-    const candidate =
+    return (
       (typeof process !== 'undefined' && process.env?.GEMINI_MODEL) ||
       this.modelName ||
-      'gemini-3.8-flash';
-    // Otomatis upgrade gemini-2.5-flash karena Google membatasi akses 2.5 untuk pengguna baru
-    if (candidate === 'gemini-2.5-flash') {
-      return 'gemini-3.8-flash';
-    }
-    return candidate;
+      DEFAULT_GEMINI_MODEL
+    );
   }
 
   public isConfigured(): boolean {
@@ -158,39 +154,13 @@ export class GeminiService implements IGeminiClient, IGeminiExtractionClient {
     const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
 
     try {
-      let result;
-      // Exponential backoff retry untuk transient 503 / high demand spike (Google Gemini API Best Practices)
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          result = await model.generateContent({
-            contents: [{ role: 'user', parts: [{ text: promptText }] }],
-          });
-          break;
-        } catch (callErr: unknown) {
-          const msg = callErr instanceof Error ? callErr.message : String(callErr);
-          if (
-            (msg.includes('503') ||
-              msg.includes('high demand') ||
-              msg.includes('overload') ||
-              msg.includes('429')) &&
-            attempt < 2
-          ) {
-            await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
-            continue;
-          }
-          throw callErr;
-        }
-      }
+      // Sesuai PRD: Eksekusi tunggal dengan batas waktu 30 detik.
+      // Jika gagal, error dilempar ke UI agar pengguna yang menekan tombol "Coba Lagi".
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: promptText }] }],
+      });
 
       clearTimeout(timeoutId);
-
-      if (!result) {
-        const error: GeminiApiError = {
-          code: 'INVALID_AI_RESPONSE',
-          message: 'Gagal memperoleh respons dari model AI setelah retry.',
-        };
-        throw error;
-      }
 
       const responseText = result.response.text();
       if (!responseText || responseText.trim().length === 0) {
@@ -302,38 +272,13 @@ export class GeminiService implements IGeminiClient, IGeminiExtractionClient {
     const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
 
     try {
-      let result;
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          result = await model.generateContent({
-            contents: [{ role: 'user', parts: [{ text: promptText }] }],
-          });
-          break;
-        } catch (callErr: unknown) {
-          const msg = callErr instanceof Error ? callErr.message : String(callErr);
-          if (
-            (msg.includes('503') ||
-              msg.includes('high demand') ||
-              msg.includes('overload') ||
-              msg.includes('429')) &&
-            attempt < 2
-          ) {
-            await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
-            continue;
-          }
-          throw callErr;
-        }
-      }
+      // Sesuai PRD: Eksekusi tunggal dengan batas waktu 30 detik.
+      // Jika gagal, error dilempar ke UI agar pengguna yang menekan tombol "Coba Lagi".
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: promptText }] }],
+      });
 
       clearTimeout(timeoutId);
-
-      if (!result) {
-        const error: ChecklistApiError = {
-          code: 'INVALID_AI_RESPONSE',
-          message: 'Gagal memperoleh respons dari model AI setelah retry.',
-        };
-        throw error;
-      }
 
       const responseText = result.response.text();
       if (!responseText || responseText.trim().length === 0) {

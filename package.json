@@ -9,8 +9,9 @@
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
+    "serve": "tsx src/server/prodServer.ts",
     "test": "vitest run",
-    "test:all": "vitest run && npx tsx src/test/verifyDashboard.ts && npx tsx --test tests/*.test.ts"
+    "test:all": "vitest run && npx tsx src/test/verifyDashboard.ts && npx tsx tests/verifyExtractionLive.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -29,6 +30,7 @@
     "autoprefixer": "^10.4.20",
     "postcss": "^8.5.2",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.23.15",
     "typescript": "^5.7.3",
     "vite": "^5.4.10",
     "vitest": "^2.1.4"

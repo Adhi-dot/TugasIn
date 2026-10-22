@@ -1,6 +1,7 @@
 import type { Plugin } from 'vite';
 import type { IncomingMessage, ServerResponse } from 'http';
 import { handleGenerateChecklist } from './api/generateChecklist';
+import { handleExtractTask } from './api/extractTask';
 
 /**
  * Helper untuk membaca stream request body JSON dari client
@@ -64,6 +65,31 @@ export function viteApiPlugin(): Plugin {
           try {
             const body = await readJsonBody(req);
             const apiResult = await handleGenerateChecklist(body);
+
+            res.statusCode = apiResult.status;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(apiResult.body));
+          } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Terjadi kesalahan internal pada server.';
+            res.statusCode = 400;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ error: { code: 'INVALID_INPUT', message } }));
+          }
+          return;
+        }
+
+        // Rute 2: POST /api/extract-task
+        if (urlPath === '/api/extract-task') {
+          if (req.method !== 'POST') {
+            res.statusCode = 405;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ error: { code: 'METHOD_NOT_ALLOWED', message: 'Hanya metode POST yang diizinkan.' } }));
+            return;
+          }
+
+          try {
+            const body = await readJsonBody(req);
+            const apiResult = await handleExtractTask(body);
 
             res.statusCode = apiResult.status;
             res.setHeader('Content-Type', 'application/json');

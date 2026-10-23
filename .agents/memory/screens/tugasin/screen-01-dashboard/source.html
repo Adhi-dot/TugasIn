@@ -1,0 +1,553 @@
+﻿<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TugasIn - Dari Chat Jadi Checklist</title>
+<!-- Plus Jakarta Sans Google Font -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Google Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface": "#FFFFFF",
+            "inverse-primary": "#c3c0ff",
+            "background": "#fcf8ff",
+            "tertiary-fixed-dim": "#ffb695",
+            "tertiary-container": "#a44100",
+            "surface-container-highest": "#e4e1ee",
+            "status-not-started": "#F1F5F9",
+            "on-secondary-fixed-variant": "#372abf",
+            "on-secondary-container": "#fffbff",
+            "on-tertiary-container": "#ffd2be",
+            "surface-container-high": "#eae6f4",
+            "inverse-on-surface": "#f3effc",
+            "surface-container": "#f0ecf9",
+            "outline": "#777587",
+            "on-tertiary-fixed-variant": "#7b2f00",
+            "error-container": "#ffdad6",
+            "border": "#E2E8F0",
+            "surface-variant": "#e4e1ee",
+            "secondary": "#4e45d5",
+            "ink-primary": "#0F172A",
+            "surface-tint": "#4d44e3",
+            "surface-container-low": "#f5f2ff",
+            "on-surface": "#1b1b24",
+            "primary-fixed-dim": "#c3c0ff",
+            "on-secondary-fixed": "#100069",
+            "tertiary": "#7e3000",
+            "on-secondary": "#ffffff",
+            "canvas": "#F8FAFC",
+            "on-primary-fixed-variant": "#3323cc",
+            "urgent-overdue": "#FFF1F2",
+            "status-done": "#ECFDF5",
+            "secondary-fixed-dim": "#c3c0ff",
+            "on-surface-variant": "#464555",
+            "status-in-progress": "#FEF3C7",
+            "secondary-fixed": "#e3dfff",
+            "on-primary": "#ffffff",
+            "primary": "#3525cd",
+            "on-error": "#ffffff",
+            "on-error-container": "#93000a",
+            "tertiary-fixed": "#ffdbcc",
+            "secondary-container": "#6860ef",
+            "outline-variant": "#c7c4d8",
+            "inverse-surface": "#302f39",
+            "on-tertiary": "#ffffff",
+            "primary-fixed": "#e2dfff",
+            "on-primary-container": "#dad7ff",
+            "ink-secondary": "#475569",
+            "error": "#ba1a1a",
+            "surface-dim": "#dcd8e5",
+            "on-primary-fixed": "#0f0069",
+            "on-tertiary-fixed": "#351000",
+            "surface-container-lowest": "#ffffff",
+            "primary-container": "#4f46e5",
+            "ink-muted": "#64748B",
+            "on-background": "#1b1b24",
+            "surface-bright": "#fcf8ff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          "spacing": {
+            "margin": "1.5rem",
+            "space-lg": "1.5rem",
+            "space-sm": "0.5rem",
+            "space-xs": "0.25rem",
+            "space-md": "1rem",
+            "gutter": "1rem",
+            "space-xl": "2rem"
+          },
+          "fontFamily": {
+            "headline-lg": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.025em", "fontWeight": "700" }],
+            "headline-sm": ["16px", { "lineHeight": "22px", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "headline-md": ["18px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }]
+          }
+        },
+      },
+    }
+  </script>
+</head>
+<body class="bg-canvas text-ink-primary font-body-md min-h-screen flex flex-col antialiased selection:bg-primary selection:text-surface">
+<!-- TopNavBar (Shared Component) -->
+<header class="w-full border-b border-border bg-surface sticky top-0 z-40 px-gutter md:px-margin py-space-sm flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-lg">
+<!-- Brand Anchor -->
+<div class="flex items-center gap-2.5">
+<div class="w-9 h-9 rounded-lg bg-primary-container text-surface flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[20px]" data-icon="checklist">checklist</span>
+</div>
+<div>
+<span class="font-headline-md text-headline-md font-bold text-primary tracking-tight">TugasIn</span>
+<p class="font-label-sm text-[11px] text-ink-muted leading-none hidden sm:block">Dari chat jadi checklist</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="hidden md:flex items-center gap-space-md ml-space-md">
+<a class="border-b-2 border-primary text-primary font-headline-sm text-headline-sm pb-1" href="#">Dashboard</a>
+<a class="text-ink-secondary font-body-md text-body-md hover:text-ink-primary pb-1" href="#">Mata Kuliah</a>
+<a class="text-ink-secondary font-body-md text-body-md hover:text-ink-primary pb-1" href="#">Kalender</a>
+<a class="text-ink-secondary font-body-md text-body-md hover:text-ink-primary pb-1" href="#">Arsip</a>
+</nav>
+</div>
+<!-- Actions & Profile -->
+<div class="flex items-center gap-space-sm sm:gap-space-md">
+<div class="hidden sm:flex items-center gap-2">
+<button class="border border-border bg-surface text-ink-primary hover:bg-canvas font-body-md text-body-md font-medium px-3.5 py-1.5 rounded-lg active:scale-95 transition-all" type="button">
+          + Tambah manual
+        </button>
+<button class="bg-primary-container hover:bg-secondary text-surface font-body-md text-body-md font-medium px-3.5 py-1.5 rounded-lg active:scale-95 transition-all flex items-center gap-1.5 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]" data-icon="auto_awesome">auto_awesome</span>
+<span>+ Tambah dari pengumuman</span>
+</button>
+</div>
+<!-- Quick action on mobile -->
+<button class="sm:hidden bg-primary-container text-surface p-2 rounded-lg flex items-center justify-center" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+</button>
+<div class="h-6 w-[1px] bg-border mx-1 hidden sm:block"></div>
+<!-- Icons & Profile Avatar -->
+<div class="flex items-center gap-1 sm:gap-2">
+<button aria-label="Notifikasi" class="text-ink-secondary hover:text-ink-primary p-1.5 rounded-lg hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="notifications">notifications</span>
+</button>
+<button aria-label="Bantuan" class="text-ink-secondary hover:text-ink-primary p-1.5 rounded-lg hover:bg-surface-container transition-colors hidden sm:inline-flex" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="help">help</span>
+</button>
+<div class="relative ml-1">
+<img alt="Foto profil mahasiswa" class="w-8 h-8 rounded-full border border-border object-cover bg-surface-container" data-alt="A clean portrait photo of a university student with soft natural lighting, facing the camera with a confident and relaxed expression, wearing neutral casual college clothing. High-contrast academic light-mode style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqwH9jCZ5Fjay4wADrMG_tWS2RfAAgHlfqJjsrmX-fkPB7PEZPXHxYBfAdrdDNa4fQCN2MqwjhGXwUQsUTYw6Xkg0wi8_bBkh4b0L58mii9dX9w7d3h4v50uL4J1HM8QafQCm86cYafhCnDDuCa5_6HPupGpt739OiqXaGQIYcliXtEyx-UdOa2x76X1gzJ4DwuVY-OrLW8WinUva5iqy1UhloAecCwi9P7B2MI9eGAhJqdoM-SAi0F0n6MGKV2hypKCrUz5oj6sw"/>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-surface"></span>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Layout Shell -->
+<div class="flex-1 flex w-full">
+<!-- SideNavBar (Shared Component) -->
+<aside class="hidden lg:flex flex-col w-64 border-r border-border bg-surface p-space-md justify-between shrink-0 min-h-[calc(100vh-65px)]">
+<div class="space-y-space-md">
+<!-- Extraction CTA Button -->
+<button class="w-full bg-primary-container text-surface hover:bg-secondary font-headline-sm text-headline-sm py-2 px-space-md rounded-lg flex items-center justify-center gap-2 active:scale-[0.99] transition-transform shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]" data-icon="chat_bubble">chat_bubble</span>
+<span>+ Ekstrak Chat</span>
+</button>
+<!-- Navigation Tabs -->
+<div class="space-y-1">
+<span class="font-label-sm text-label-sm text-ink-muted uppercase tracking-wider px-space-sm mb-1 block">Status Tugas</span>
+<a class="flex items-center gap-space-sm bg-primary-container text-on-primary-container rounded-lg px-space-md py-space-sm font-headline-sm text-headline-sm transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="checklist">checklist</span>
+<span>Semua Tugas</span>
+<span class="ml-auto text-xs bg-surface/20 px-1.5 py-0.5 rounded font-medium">5</span>
+</a>
+<a class="flex items-center gap-space-sm text-ink-secondary rounded-lg px-space-md py-space-sm font-body-md text-body-md hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="schedule">schedule</span>
+<span>Belum Mulai</span>
+<span class="ml-auto text-xs text-ink-muted font-medium">2</span>
+</a>
+<a class="flex items-center gap-space-sm text-ink-secondary rounded-lg px-space-md py-space-sm font-body-md text-body-md hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="hourglass_top">hourglass_top</span>
+<span>Dikerjakan</span>
+<span class="ml-auto text-xs text-ink-muted font-medium">2</span>
+</a>
+<a class="flex items-center gap-space-sm text-ink-secondary rounded-lg px-space-md py-space-sm font-body-md text-body-md hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="check_circle">check_circle</span>
+<span>Selesai</span>
+<span class="ml-auto text-xs text-ink-muted font-medium">1</span>
+</a>
+<a class="flex items-center gap-space-sm text-ink-secondary rounded-lg px-space-md py-space-sm font-body-md text-body-md hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="archive">archive</span>
+<span>Arsip Semester</span>
+</a>
+</div>
+</div>
+<!-- Footer Tabs -->
+<div class="space-y-1 pt-space-md border-t border-border">
+<a class="flex items-center gap-space-sm text-ink-secondary rounded-lg px-space-md py-space-sm font-body-md text-body-md hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+<span>Pengaturan</span>
+</a>
+<a class="flex items-center gap-space-sm text-ink-secondary rounded-lg px-space-md py-space-sm font-body-md text-body-md hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="help">help</span>
+<span>Bantuan</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 p-gutter md:p-margin max-w-7xl mx-auto w-full">
+<!-- Welcome & Context Header -->
+<div class="mb-space-lg">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-ink-primary tracking-tight">Ringkasan Tugas Kuliah</h1>
+<p class="font-body-md text-body-md text-ink-secondary mt-0.5">Kelola dan selesaikan tugas yang terkonversi otomatis dari chat pengumuman kelas.</p>
+</div>
+<!-- Timezone & Status sync -->
+<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface border border-border text-ink-secondary font-label-sm text-label-sm shadow-sm self-start sm:self-auto">
+<span class="material-symbols-outlined text-[16px] text-primary" data-icon="schedule">schedule</span>
+<span>Zona Waktu: <strong>WIB (UTC+7)</strong></span>
+</div>
+</div>
+</div>
+<!-- Summary Stats Strip -->
+<section class="grid grid-cols-1 sm:grid-cols-2 gap-space-md mb-space-lg">
+<!-- Card 1: Tugas Aktif -->
+<div class="bg-surface border border-border rounded-xl p-space-md shadow-sm flex items-center justify-between transition-all hover:border-slate-300">
+<div class="space-y-1">
+<span class="font-label-sm text-label-sm text-ink-muted">Tugas Aktif</span>
+<div class="font-headline-lg text-headline-lg text-ink-primary font-bold">4</div>
+<p class="font-body-md text-body-md text-ink-secondary">Tugas aktif perlu diselesaikan</p>
+</div>
+<div class="w-12 h-12 rounded-xl bg-surface-container text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[26px]" data-icon="assignment_late">assignment_late</span>
+</div>
+</div>
+<!-- Card 2: Tugas Selesai -->
+<div class="bg-surface border border-border rounded-xl p-space-md shadow-sm flex items-center justify-between transition-all hover:border-slate-300">
+<div class="space-y-1">
+<span class="font-label-sm text-label-sm text-ink-muted">Tugas Selesai</span>
+<div class="font-headline-lg text-headline-lg text-emerald-600 font-bold">1</div>
+<p class="font-body-md text-body-md text-ink-secondary">Tugas berhasil dituntaskan</p>
+</div>
+<div class="w-12 h-12 rounded-xl bg-status-done text-emerald-600 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[26px]" data-icon="task_alt">task_alt</span>
+</div>
+</div>
+</section>
+<!-- Filter & Controls Toolbar -->
+<section class="bg-surface border border-border rounded-xl p-space-sm mb-space-lg shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-sm">
+<!-- Segmented Filter Buttons -->
+<div class="inline-flex p-1 bg-canvas rounded-lg border border-border overflow-x-auto text-nowrap">
+<button class="px-3.5 py-1.5 rounded-md bg-surface shadow-sm font-headline-sm text-headline-sm text-ink-primary text-xs font-semibold transition-all" type="button">
+            Semua (5)
+          </button>
+<button class="px-3.5 py-1.5 rounded-md text-ink-secondary hover:text-ink-primary font-body-md text-body-md text-xs transition-all" type="button">
+            Belum mulai (2)
+          </button>
+<button class="px-3.5 py-1.5 rounded-md text-ink-secondary hover:text-ink-primary font-body-md text-body-md text-xs transition-all" type="button">
+            Dikerjakan (2)
+          </button>
+<button class="px-3.5 py-1.5 rounded-md text-ink-secondary hover:text-ink-primary font-body-md text-body-md text-xs transition-all" type="button">
+            Selesai (1)
+          </button>
+</div>
+<!-- Search Bar with Quick Filter -->
+<div class="relative w-full md:w-80">
+<span class="material-symbols-outlined text-[18px] text-ink-muted absolute left-3 top-1/2 -translate-y-1/2" data-icon="search">search</span>
+<input class="w-full bg-canvas border border-border focus:border-primary focus:ring-1 focus:ring-primary text-ink-primary font-body-md text-body-md pl-9 pr-3.5 py-1.5 rounded-lg outline-none transition-all placeholder:text-ink-muted text-xs" placeholder="Cari judul tugas atau mata kuliah..." type="text"/>
+</div>
+</section>
+<!-- Main Task Grid (Editorial Academic Bento Cards) -->
+<section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-space-md">
+<!-- Card 1: Terlambat / Overdue -->
+<article class="bg-surface border border-border rounded-xl p-space-md shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between relative overflow-hidden group">
+<div class="absolute top-0 left-0 right-0 h-1 bg-rose-500"></div>
+<div>
+<!-- Course & Status Pills -->
+<div class="flex items-center justify-between gap-2 mb-space-sm pt-1">
+<span class="px-2 py-0.5 rounded-md bg-slate-100 text-ink-secondary font-label-sm text-label-sm border border-border">
+                Pemrograman Web
+              </span>
+<span class="px-2.5 py-0.5 rounded-full bg-status-in-progress text-amber-900 font-label-sm text-[11px] font-semibold flex items-center gap-1 border border-amber-200">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                Dikerjakan
+              </span>
+</div>
+<!-- Task Title -->
+<h2 class="font-headline-sm text-headline-sm text-ink-primary group-hover:text-primary transition-colors line-clamp-2 mb-space-sm">
+              Tugas 3: Implementasi REST API Express &amp; SQLite
+            </h2>
+<!-- Urgency Badge -->
+<div class="mb-space-md p-2 rounded-lg bg-urgent-overdue border border-rose-200 flex items-center gap-2 text-rose-700">
+<span class="material-symbols-outlined text-[18px] text-rose-600 shrink-0" data-icon="error">error</span>
+<span class="font-label-sm text-[11px] font-medium leading-tight">
+                Terlambat Â· Batas 20 Okt 2026, 23:59 WIB
+              </span>
+</div>
+</div>
+<!-- Progress Section & Footer Action -->
+<div class="pt-space-sm border-t border-border">
+<div class="flex items-center justify-between font-label-sm text-label-sm mb-1.5">
+<span class="text-ink-secondary">Progress Checklist</span>
+<span class="font-semibold text-amber-700">3/5 langkah (60%)</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden mb-space-sm">
+<div class="bg-amber-500 h-2 rounded-full" style="width: 60%"></div>
+</div>
+<div class="flex items-center justify-between mt-space-sm pt-1">
+<button class="text-ink-muted hover:text-ink-primary text-xs flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]" data-icon="edit_note">edit_note</span>
+<span>Buka Detail</span>
+</button>
+<button class="text-primary hover:text-secondary font-headline-sm text-xs font-semibold flex items-center gap-0.5" type="button">
+<span>Lanjutkan</span>
+<span class="material-symbols-outlined text-[14px]" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Card 2: Mendekati Deadline -->
+<article class="bg-surface border border-border rounded-xl p-space-md shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between group">
+<div>
+<!-- Course & Status Pills -->
+<div class="flex items-center justify-between gap-2 mb-space-sm">
+<span class="px-2 py-0.5 rounded-md bg-slate-100 text-ink-secondary font-label-sm text-label-sm border border-border">
+                Desain Antarmuka UI/UX
+              </span>
+<span class="px-2.5 py-0.5 rounded-full bg-status-not-started text-ink-secondary font-label-sm text-[11px] font-medium border border-border flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                Belum mulai
+              </span>
+</div>
+<!-- Task Title -->
+<h2 class="font-headline-sm text-headline-sm text-ink-primary group-hover:text-primary transition-colors line-clamp-2 mb-space-sm">
+              Wireframe &amp; Prototipe Aplikasi Perpustakaan Kampus
+            </h2>
+<!-- Deadline Badge -->
+<div class="mb-space-md p-2 rounded-lg bg-canvas border border-border flex items-center gap-2 text-ink-secondary">
+<span class="material-symbols-outlined text-[18px] text-primary shrink-0" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-sm text-[11px] leading-tight font-medium text-ink-primary">
+                22 Okt 2026, 23:59 WIB
+              </span>
+</div>
+</div>
+<!-- Progress Section & Footer Action -->
+<div class="pt-space-sm border-t border-border">
+<div class="flex items-center justify-between font-label-sm text-label-sm mb-1.5">
+<span class="text-ink-secondary">Progress Checklist</span>
+<span class="font-medium text-ink-muted">0/4 langkah (0%)</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden mb-space-sm">
+<div class="bg-primary h-2 rounded-full" style="width: 0%"></div>
+</div>
+<div class="flex items-center justify-between mt-space-sm pt-1">
+<button class="text-ink-muted hover:text-ink-primary text-xs flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]" data-icon="edit_note">edit_note</span>
+<span>Buka Detail</span>
+</button>
+<button class="text-primary hover:text-secondary font-headline-sm text-xs font-semibold flex items-center gap-0.5" type="button">
+<span>Mulai Tugas</span>
+<span class="material-symbols-outlined text-[14px]" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Card 3: Batas Tanggal Tanpa Jam -->
+<article class="bg-surface border border-border rounded-xl p-space-md shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between group">
+<div>
+<!-- Course & Status Pills -->
+<div class="flex items-center justify-between gap-2 mb-space-sm">
+<span class="px-2 py-0.5 rounded-md bg-slate-100 text-ink-secondary font-label-sm text-label-sm border border-border">
+                Kecerdasan Buatan
+              </span>
+<span class="px-2.5 py-0.5 rounded-full bg-status-in-progress text-amber-900 font-label-sm text-[11px] font-semibold flex items-center gap-1 border border-amber-200">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                Dikerjakan
+              </span>
+</div>
+<!-- Task Title -->
+<h2 class="font-headline-sm text-headline-sm text-ink-primary group-hover:text-primary transition-colors line-clamp-2 mb-space-sm">
+              Laporan Eksplorasi Model Klasifikasi Decision Tree
+            </h2>
+<!-- Deadline Badge -->
+<div class="mb-space-md p-2 rounded-lg bg-canvas border border-border flex items-center gap-2 text-ink-secondary">
+<span class="material-symbols-outlined text-[18px] text-ink-muted shrink-0" data-icon="schedule">schedule</span>
+<span class="font-label-sm text-[11px] leading-tight">
+                Batas tanggal <strong>24 Okt 2026</strong> Â· <span class="text-ink-muted">jam tidak disebutkan</span>
+</span>
+</div>
+</div>
+<!-- Progress Section & Footer Action -->
+<div class="pt-space-sm border-t border-border">
+<div class="flex items-center justify-between font-label-sm text-label-sm mb-1.5">
+<span class="text-ink-secondary">Progress Checklist</span>
+<span class="font-semibold text-primary">2/3 langkah (67%)</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden mb-space-sm">
+<div class="bg-primary-container h-2 rounded-full" style="width: 67%"></div>
+</div>
+<div class="flex items-center justify-between mt-space-sm pt-1">
+<button class="text-ink-muted hover:text-ink-primary text-xs flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]" data-icon="edit_note">edit_note</span>
+<span>Buka Detail</span>
+</button>
+<button class="text-primary hover:text-secondary font-headline-sm text-xs font-semibold flex items-center gap-0.5" type="button">
+<span>Lanjutkan</span>
+<span class="material-symbols-outlined text-[14px]" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Card 4: Tanpa Deadline -->
+<article class="bg-surface border border-border rounded-xl p-space-md shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between group">
+<div>
+<!-- Course & Status Pills -->
+<div class="flex items-center justify-between gap-2 mb-space-sm">
+<span class="px-2 py-0.5 rounded-md bg-slate-100 text-ink-secondary font-label-sm text-label-sm border border-border">
+                Sistem Basis Data
+              </span>
+<span class="px-2.5 py-0.5 rounded-full bg-status-not-started text-ink-secondary font-label-sm text-[11px] font-medium border border-border flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                Belum mulai
+              </span>
+</div>
+<!-- Task Title -->
+<h2 class="font-headline-sm text-headline-sm text-ink-primary group-hover:text-primary transition-colors line-clamp-2 mb-space-sm">
+              Latihan Mandiri Normalisasi Bentuk 3NF
+            </h2>
+<!-- Deadline Badge -->
+<div class="mb-space-md p-2 rounded-lg bg-canvas/60 border border-border/80 flex items-center gap-2 text-ink-muted">
+<span class="material-symbols-outlined text-[18px] text-ink-muted shrink-0" data-icon="event_busy">event_busy</span>
+<span class="font-label-sm text-[11px] leading-tight">
+                Belum ada deadline
+              </span>
+</div>
+</div>
+<!-- Progress Section & Footer Action -->
+<div class="pt-space-sm border-t border-border">
+<div class="flex items-center justify-between font-label-sm text-label-sm mb-1.5">
+<span class="text-ink-secondary">Progress Checklist</span>
+<span class="font-medium text-ink-muted">0/2 langkah (0%)</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden mb-space-sm">
+<div class="bg-slate-300 h-2 rounded-full" style="width: 0%"></div>
+</div>
+<div class="flex items-center justify-between mt-space-sm pt-1">
+<button class="text-ink-muted hover:text-ink-primary text-xs flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]" data-icon="edit_note">edit_note</span>
+<span>Buka Detail</span>
+</button>
+<button class="text-primary hover:text-secondary font-headline-sm text-xs font-semibold flex items-center gap-0.5" type="button">
+<span>Mulai Tugas</span>
+<span class="material-symbols-outlined text-[14px]" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Card 5: Selesai -->
+<article class="bg-surface border border-border rounded-xl p-space-md shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between group">
+<div>
+<!-- Course & Status Pills -->
+<div class="flex items-center justify-between gap-2 mb-space-sm">
+<span class="px-2 py-0.5 rounded-md bg-slate-100 text-ink-secondary font-label-sm text-label-sm border border-border">
+                Pengantar Rekayasa Perangkat Lunak
+              </span>
+<span class="px-2.5 py-0.5 rounded-full bg-status-done text-emerald-700 font-label-sm text-[11px] font-semibold flex items-center gap-1 border border-emerald-200">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+                Selesai
+              </span>
+</div>
+<!-- Task Title -->
+<h2 class="font-headline-sm text-headline-sm text-ink-primary group-hover:text-primary transition-colors line-clamp-2 mb-space-sm">
+              Dokumen Spesifikasi Kebutuhan Perangkat Lunak (SKPL)
+            </h2>
+<!-- Deadline Badge -->
+<div class="mb-space-md p-2 rounded-lg bg-status-done/50 border border-emerald-100 flex items-center gap-2 text-emerald-800">
+<span class="material-symbols-outlined text-[18px] text-emerald-600 shrink-0" data-icon="verified">verified</span>
+<span class="font-label-sm text-[11px] leading-tight">
+                Diselesaikan pada 19 Okt 2026
+              </span>
+</div>
+</div>
+<!-- Progress Section & Footer Action -->
+<div class="pt-space-sm border-t border-border">
+<div class="flex items-center justify-between font-label-sm text-label-sm mb-1.5">
+<span class="text-ink-secondary">Progress Checklist</span>
+<span class="font-semibold text-emerald-700">6/6 langkah (100%)</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden mb-space-sm">
+<div class="bg-emerald-600 h-2 rounded-full" style="width: 100%"></div>
+</div>
+<div class="flex items-center justify-between mt-space-sm pt-1">
+<button class="text-ink-muted hover:text-ink-primary text-xs flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]" data-icon="visibility">visibility</span>
+<span>Lihat Hasil</span>
+</button>
+<span class="text-emerald-700 font-label-sm text-xs font-semibold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[16px]" data-icon="check_circle">check_circle</span>
+<span>Tuntas</span>
+</span>
+</div>
+</div>
+</article>
+<!-- Bento Utility Card: AI Parser Callout -->
+<article class="bg-canvas border border-dashed border-border rounded-xl p-space-md flex flex-col justify-between items-center text-center group hover:border-primary/50 transition-colors">
+<div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-primary mb-3 mt-2">
+<span class="material-symbols-outlined text-[24px]" data-icon="chat">chat</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-ink-primary mb-1">Ada Pengumuman Chat Baru?</h3>
+<p class="font-body-md text-xs text-ink-secondary max-w-xs mb-4">Tempel pesan dari WhatsApp grup kelas Anda. TugasIn mengekstrak tanggal, syarat, dan rincian tugas secara instan.</p>
+</div>
+<button class="w-full py-2 px-3 rounded-lg bg-surface border border-border text-ink-primary hover:bg-surface-container font-headline-sm text-xs font-semibold shadow-sm transition-all flex items-center justify-center gap-1.5 active:scale-95" type="button">
+<span class="material-symbols-outlined text-[16px] text-primary" data-icon="content_paste">content_paste</span>
+<span>Tempel Teks Chat</span>
+</button>
+</article>
+</section>
+<!-- Task Activity & Tip Banner -->
+<section class="mt-space-lg bg-surface border border-border rounded-xl p-space-md shadow-sm flex flex-col sm:flex-row items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]" data-icon="lightbulb">lightbulb</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-sm text-ink-primary font-semibold">Tips Belajar Akademik</h4>
+<p class="font-body-md text-xs text-ink-secondary">Pecah tugas besar menjadi 3-5 checklist sederhana untuk mengurangi prokrastinasi saat menghadapi semester padat.</p>
+</div>
+</div>
+<button class="text-primary hover:underline font-label-sm text-xs shrink-0 font-medium" type="button">
+          Pelajari Teknik Pomodoro â†’
+        </button>
+</section>
+</main>
+</div>
+</body></html>
+
